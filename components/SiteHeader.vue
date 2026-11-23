@@ -10,7 +10,7 @@ import { formatPrice, initials } from '../utils/format'
 
 const { count, toggleCart } = useCart()
 const { featuredProducts } = useStore()
-const { user: accountUser } = useFirebaseAuth()
+const { user: accountUser, profile: accountProfile } = useFirebaseAuth()
 const route = useRoute()
 const { query, isSearchOpen, filteredProducts, isFiltering, toggleSearch, closeSearch } = useCatalog()
 
@@ -33,11 +33,19 @@ const accountLabel = computed(
   () => accountUser.value?.displayName?.trim() || accountUser.value?.email || 'My profile',
 )
 const accountInitials = computed(() => initials(accountLabel.value) || 'AA')
+const accountPhotoUrl = computed(
+  () => accountUser.value?.photoURL?.trim() || accountProfile.value?.photoUrl?.trim() || '',
+)
+const accountPhotoFailed = ref(false)
 const accountContact = computed(
   () =>
     accountUser.value?.email ??
     (accountUser.value ? 'AAROH. member' : 'Sign in or create an account'),
 )
+
+watch(accountPhotoUrl, () => {
+  accountPhotoFailed.value = false
+})
 
 const wordmarkLetters = ['A', 'A', 'R', 'O', 'H', '.']
 
@@ -204,10 +212,11 @@ onBeforeUnmount(() => {
         >
           <span class="account-btn__avatar" aria-hidden="true">
             <img
-              v-if="accountUser?.photoURL"
-              :src="accountUser.photoURL"
+              v-if="accountPhotoUrl && !accountPhotoFailed"
+              :src="accountPhotoUrl"
               alt=""
               referrerpolicy="no-referrer"
+              @error="accountPhotoFailed = true"
             />
             <span v-else-if="accountUser" class="account-btn__initials">{{ accountInitials }}</span>
             <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
@@ -1395,6 +1404,14 @@ onBeforeUnmount(() => {
 @media (max-width: 620px) {
   .account-btn__name {
     display: none;
+  }
+
+  .account-btn--signed-in {
+    width: 2.4rem;
+    min-width: 2.4rem;
+    justify-content: center;
+    padding: 0.2rem;
+    border-radius: 50%;
   }
 
   .menu-btn__label {

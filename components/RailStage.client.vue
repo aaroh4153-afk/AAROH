@@ -288,8 +288,19 @@ function tick() {
 
   if (compact) {
     const activeSlot = slots[safeActive]
-    const followX = activeSlot ? activeSlot.baseX : 0
-    camera.position.x += (followX - camera.position.x) * 0.085
+    let dragFollow = 0
+    if (activeSlot && isDragging) {
+      const visibleHalfWidth =
+        camera.position.z * Math.tan(THREE.MathUtils.degToRad(FOV / 2)) * camera.aspect
+      const maxVisibleOffset = Math.max(0, visibleHalfWidth - PLANE_WIDTH / 2 - 0.04)
+      dragFollow = THREE.MathUtils.clamp(
+        dragOffset * 0.62,
+        dragOffset - maxVisibleOffset,
+        dragOffset + maxVisibleOffset,
+      )
+    }
+    const followX = activeSlot ? activeSlot.baseX + dragFollow : 0
+    camera.position.x += (followX - camera.position.x) * (isDragging ? 0.2 : 0.085)
     camera.lookAt(camera.position.x, -0.78, 0)
   } else {
     const targetCamX = inside && !reduceMotion && !isDragging ? pointer.x * 0.35 : 0
@@ -369,6 +380,7 @@ function updateHoverFromPointer() {
 }
 
 function onPointerMove(event: PointerEvent) {
+  if (failed.value) return
   setPointer(event)
   inside = true
 
@@ -389,6 +401,7 @@ function onPointerLeave() {
 }
 
 function onPointerDown(event: PointerEvent) {
+  if (failed.value) return
   setPointer(event)
   isDragging = true
   dragStartX = event.clientX
@@ -441,6 +454,26 @@ function onPointerUp(event: PointerEvent) {
 
 function onPointerCancel(event: PointerEvent) {
   finishDrag(event)
+}
+
+function onFallbackScroll(event: Event) {
+  const container = event.currentTarget as HTMLDivElement
+  const center = container.getBoundingClientRect().left + container.clientWidth / 2
+  const items = Array.from(container.querySelectorAll<HTMLElement>('.rail-fallback__item'))
+  if (!items.length) return
+
+  let closest = 0
+  let minDistance = Number.POSITIVE_INFINITY
+  items.forEach((item, index) => {
+    const rect = item.getBoundingClientRect()
+    const distance = Math.abs(rect.left + rect.width / 2 - center)
+    if (distance < minDistance) {
+      minDistance = distance
+      closest = index
+    }
+  })
+
+  if (active.value !== closest) active.value = closest
 }
 
 function onContextLost(event: Event) {
@@ -593,7 +626,7 @@ onBeforeUnmount(dispose)
     @lostpointercapture="onPointerCancel"
     @contextmenu.prevent
   >
-    <div v-if="failed" class="rail-fallback">
+    <div v-if="failed" class="rail-fallback" @scroll.passive="onFallbackScroll">
       <figure
         v-for="(product, index) in products"
         :key="product.id"
@@ -625,6 +658,7 @@ onBeforeUnmount(dispose)
 
 .rail-stage--fallback {
   cursor: default;
+  touch-action: pan-x pan-y;
 }
 
 .rail-stage--fallback :deep(canvas) {
@@ -663,5 +697,24 @@ onBeforeUnmount(dispose)
 .rail-fallback__item--active {
   opacity: 1;
   transform: scale(1.04);
+}
+
+@media (max-width: 819px) {
+  .rail-stage--fallback .rail-fallback {
+    justify-content: flex-start;
+    gap: 0.75rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-inline: 12%;
+    scroll-snap-type: x mandatory;
+  }
+
+  .rail-stage--fallback .rail-fallback__item {
+    width: 76%;
+    max-width: none;
+    height: 90%;
+    flex: 0 0 76%;
+    scroll-snap-align: center;
+  }
 }
 </style>

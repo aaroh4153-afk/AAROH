@@ -155,55 +155,75 @@ onBeforeUnmount(() => {
     }"
   >
     <div class="nav-shell">
+      <!-- Left side: On desktop shows Logo, on mobile shows Menu + Search buttons -->
       <div class="nav-left nav-reveal">
+        <!-- Desktop Logo -->
+        <NuxtLink to="/" class="wordmark wordmark--desktop" aria-label="AAROH. home">
+          <span class="wordmark__text">AAROH<span class="wordmark__dot">.</span></span>
+        </NuxtLink>
+
+        <!-- Mobile controls: Menu + Search -->
+        <div class="mobile-nav-group">
+          <button
+            class="menu-btn"
+            type="button"
+            :class="{ 'menu-btn--open': menuOpen }"
+            :aria-expanded="menuOpen"
+            aria-controls="mobile-menu"
+            :aria-label="menuOpen ? 'Close menu' : 'Open menu'"
+            @click="menuOpen = !menuOpen"
+          >
+            <span class="menu-btn__lines" aria-hidden="true"><i /><i /></span>
+          </button>
+
+          <button
+            class="icon-btn mobile-search-btn"
+            type="button"
+            :aria-expanded="isSearchOpen"
+            aria-controls="collection-search"
+            aria-label="Search the collection"
+            @click="toggleSearch"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.8-3.8" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Center: On desktop shows Nav Links, on mobile shows centered Wordmark -->
+      <div class="nav-center nav-reveal">
+        <nav class="desktop-nav-links" aria-label="Primary Navigation">
+          <NuxtLink v-for="link in navLinks" :key="link.href" :to="link.href" class="desktop-nav-link">
+            {{ link.label }}
+          </NuxtLink>
+        </nav>
+
+        <NuxtLink to="/" class="wordmark wordmark--mobile" aria-label="AAROH. home">
+          <span class="wordmark__text">AAROH<span class="wordmark__dot">.</span></span>
+        </NuxtLink>
+      </div>
+
+      <!-- Right side: Search (desktop) + Account + Cart -->
+      <div class="nav-right nav-reveal">
+        <!-- Desktop search trigger -->
         <button
-          class="icon-btn"
+          class="desktop-search-trigger"
           type="button"
           :aria-expanded="isSearchOpen"
           aria-controls="collection-search"
           aria-label="Search the collection"
           @click="toggleSearch"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <circle cx="11" cy="11" r="7.5" />
-            <path d="m21 21-4.35-4.35" />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.8-3.8" />
           </svg>
+          <span class="desktop-search-text">Search</span>
         </button>
 
-        <button
-          class="menu-btn"
-          type="button"
-          :class="{ 'menu-btn--open': menuOpen }"
-          :aria-expanded="menuOpen"
-          aria-controls="mobile-menu"
-          :aria-label="menuOpen ? 'Close menu' : 'Open menu'"
-          @click="menuOpen = !menuOpen"
-        >
-          <span class="menu-btn__lines" aria-hidden="true"><i /><i /></span>
-          <span class="menu-btn__label">Menu</span>
-        </button>
-      </div>
-
-      <NuxtLink to="/" class="wordmark" aria-label="AAROH. home">
-        <span
-          v-for="(letter, index) in wordmarkLetters"
-          :key="index"
-          class="wordmark__letter"
-          :class="{ 'wordmark__dot': letter === '.' }"
-        >
-          <span>{{ letter }}</span>
-        </span>
-      </NuxtLink>
-
-      <div class="nav-right nav-reveal">
-        <a class="nav-cta" :href="INSTAGRAM_URL" target="_blank" rel="noopener">
-          <span>Get Now</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M7 17 17 7" />
-            <path d="M7 7h10v10" />
-          </svg>
-        </a>
-
+        <!-- Account button -->
         <NuxtLink
           class="account-btn"
           :class="{ 'account-btn--signed-in': Boolean(accountUser) }"
@@ -219,14 +239,14 @@ onBeforeUnmount(() => {
               @error="accountPhotoFailed = true"
             />
             <span v-else-if="accountUser" class="account-btn__initials">{{ accountInitials }}</span>
-            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
               <circle cx="12" cy="8" r="3.5" />
               <path d="M5 20a7 7 0 0 1 14 0" />
             </svg>
           </span>
-          <span v-if="accountUser" class="account-btn__name">{{ accountLabel }}</span>
         </NuxtLink>
 
+        <!-- Solid Black Cart Block -->
         <button
           class="cart-btn"
           type="button"
@@ -247,6 +267,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
+    <!-- Search Modal with border-radius: 2px -->
     <Teleport to="body">
       <Transition name="search-fade">
         <div
@@ -282,7 +303,7 @@ onBeforeUnmount(() => {
               </button>
             </div>
 
-            <!-- Search Results Content -->
+            <!-- Search Results Content: Responsive Grid with border-radius 2px -->
             <div class="search-modal-body">
               <h3 class="search-modal-label">Products</h3>
 
@@ -889,19 +910,116 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 
-.search-swap-enter-active,
-.search-swap-leave-active {
-  transition: opacity 0.18s ease, transform 0.22s var(--ease);
+/* ── Desktop / Mobile nav layout ───────────────────────────────────────── */
+
+/* Desktop logo — shown on ≥820px, hidden on mobile */
+.wordmark--desktop {
+  display: inline-flex;
 }
 
-.search-swap-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
+/* Mobile wordmark — hidden on desktop, shown centered on mobile */
+.wordmark--mobile {
+  display: none;
 }
 
-.search-swap-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
+/* Mobile controls group: menu btn + mobile search btn */
+.mobile-nav-group {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Nav center: desktop = nav links, mobile = centered wordmark */
+.nav-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Desktop nav links */
+.desktop-nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.1rem, 2vw, 2rem);
+}
+
+.desktop-nav-link {
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-weight: 580;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: color 0.18s ease;
+  white-space: nowrap;
+}
+
+.desktop-nav-link:hover,
+.desktop-nav-link.router-link-active {
+  color: var(--primary);
+}
+
+/* Desktop search trigger — pill-shaped search button on the right */
+.desktop-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 2.4rem;
+  padding: 0 1rem;
+  border: 1.5px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--white) 50%, transparent);
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+  white-space: nowrap;
+}
+
+.desktop-search-trigger:hover {
+  background: var(--white);
+  border-color: color-mix(in srgb, var(--ink) 32%, transparent);
+}
+
+.desktop-search-text {
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
+  font-size: 0.8rem;
+}
+
+.mobile-search-btn {
+  display: none;
+}
+
+/* ── Responsive breakpoint: switch to mobile nav ──────────────────────── */
+@media (max-width: 820px) {
+  .wordmark--desktop {
+    display: none;
+  }
+
+  .wordmark--mobile {
+    display: inline-flex;
+  }
+
+  .mobile-nav-group {
+    display: flex;
+  }
+
+  .desktop-nav-links {
+    display: none;
+  }
+
+  .desktop-search-trigger {
+    display: none;
+  }
+
+  .mobile-search-btn {
+    display: inline-flex;
+  }
+
+  /* On mobile, nav-left shows mobile-nav-group (menu + search), nav-center shows wordmark */
+  .nav-left .wordmark--desktop {
+    display: none;
+  }
 }
 
 .menu-backdrop {
@@ -1102,16 +1220,10 @@ onBeforeUnmount(() => {
   }
 
   .nav-shell {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: 1fr auto 1fr;
     gap: 8px;
     padding: 8px clamp(14px, 3vw, 22px);
     border-radius: 2px;
-  }
-
-  .wordmark {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
   }
 
   .site-header--scrolled .nav-shell {

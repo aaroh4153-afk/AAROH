@@ -160,6 +160,23 @@ async function createSchema(client: PoolClient): Promise<void> {
     CREATE INDEX IF NOT EXISTS orders_placed_at_idx ON orders(placed_at DESC);
     CREATE INDEX IF NOT EXISTS order_items_order_idx ON order_items(order_id);
 
+    CREATE TABLE IF NOT EXISTS user_carts (
+      id bigserial PRIMARY KEY,
+      firebase_uid text NOT NULL REFERENCES auth_users(firebase_uid) ON DELETE CASCADE,
+      product_id text NOT NULL,
+      product_name text NOT NULL,
+      colour text NOT NULL DEFAULT '',
+      size text,
+      price integer NOT NULL,
+      quantity integer NOT NULL DEFAULT 1 CHECK (quantity > 0),
+      image text NOT NULL DEFAULT '',
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (firebase_uid, product_id, COALESCE(size, ''))
+    );
+
+    CREATE INDEX IF NOT EXISTS user_carts_uid_idx ON user_carts(firebase_uid);
+
     -- Existing Neon databases predate the welcome-email columns; add them in place.
     ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS welcome_email_claimed_at timestamptz;
     ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS welcome_email_sent_at timestamptz;

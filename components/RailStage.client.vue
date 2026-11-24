@@ -137,9 +137,9 @@ function buildTees() {
   const geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_HEIGHT)
   geometry.translate(0, -PLANE_HEIGHT / 2 + 0.034, 0)
 
-  const hitGeometry = new THREE.PlaneGeometry(PLANE_WIDTH * 0.88, PLANE_HEIGHT * 0.92)
+  const hitGeometry = new THREE.PlaneGeometry(PLANE_WIDTH * 0.95, PLANE_HEIGHT * 0.98)
   hitGeometry.translate(0, -PLANE_HEIGHT / 2 + 0.034, 0)
-  const hitMaterial = new THREE.MeshBasicMaterial({ visible: false })
+  const hitMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
 
   const safeActive = THREE.MathUtils.clamp(Math.round(active.value) || 0, 0, MAX_INDEX)
 
@@ -359,21 +359,25 @@ function updateHoverFromPointer() {
     return
   }
 
-  // If the ray misses, snap to the nearest hanger within a reasonable distance.
+  // Intersect the z=0 plane to pick the nearest hoodie when moving across the rail
   if (raycaster.ray.intersectPlane(hoverPlane, hoverPoint)) {
-    let closest = -1
-    let minDist = 0.55
+    if (hoverPoint.y >= -PLANE_HEIGHT * 1.15 && hoverPoint.y <= 0.35) {
+      let closest = -1
+      let minDist = SPACING * 0.75
 
-    slots.forEach((slot, index) => {
-      const distance = Math.abs(slot.currentX - hoverPoint.x)
-      if (distance < minDist) {
-        minDist = distance
-        closest = index
+      slots.forEach((slot, index) => {
+        const distance = Math.abs(slot.currentX - hoverPoint.x)
+        if (distance < minDist) {
+          minDist = distance
+          closest = index
+        }
+      })
+
+      if (closest >= 0) {
+        setHovered(closest)
+        return
       }
-    })
-
-    setHovered(closest)
-    return
+    }
   }
 
   setHovered(-1)
@@ -743,7 +747,7 @@ onBeforeUnmount(dispose)
   height: 100%;
   align-items: flex-start;
   justify-content: center;
-  gap: clamp(12px, 2.2vw, 36px);
+  gap: clamp(8px, 1.6vw, 28px);
   padding-top: clamp(26px, 5.8vw, 42px);
   overflow-x: auto;
   overscroll-behavior-x: contain;

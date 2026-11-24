@@ -1,11 +1,15 @@
 import type { Product } from '~/data/products'
 
-const blueHoodieRailImages = [
-  '/images/products/hoodie-hanger-front.png',
+export const defaultRailHoodieImages = [
+  '/images/products/hoodie-front.png',
   '/images/products/hoodie-side.png',
 ]
 
 export function getHeroRailImages(product: Product): string[] {
-  if (product.id === 'blue-huddle-2') return blueHoodieRailImages
-  return product.images
+  // If the product specifically defines at least 2 images, use them, otherwise use the canonical front + side rail hoodies
+  if (product.images && product.images.length >= 2) {
+    return [product.images[0] || defaultRailHoodieImages[0], product.images[1] || defaultRailHoodieImages[1]]
+  }
+  return defaultRailHoodieImages
 }
+

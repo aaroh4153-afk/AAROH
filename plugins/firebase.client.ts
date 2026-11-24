@@ -1,12 +1,17 @@
 import { getApp, getApps, initializeApp } from 'firebase/app'
 import { getAuth, onAuthStateChanged, type Auth, type User } from 'firebase/auth'
 import { syncFirebaseUser, type FirebaseProfile } from '~/utils/firebaseAuth'
+import { useCart } from '~/composables/useCart'
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig().public
   const user = useState<User | null>('aaroh.firebase.user', () => null)
   const profile = useState<FirebaseProfile | null>('aaroh.firebase.profile', () => null)
   let auth: Auth | null = null
+
+  // Hydrate cart from localStorage immediately (no login needed)
+  const { hydrate } = useCart()
+  void hydrate()
 
   if (
     !config.firebaseApiKey ||
@@ -38,10 +43,17 @@ export default defineNuxtPlugin(() => {
       }
 
       void syncFirebaseUser(nextUser)
-        .then((result) => {
+        .then(async (result) => {
           profile.value = result.user
           if (!result.welcomeEmailSent) {
             console.warn('[aaroh/auth] Profile saved, but the welcome email was not sent.')
+          }
+          // Sync cart with server now that we have a verified user + fresh token
+          try {
+            const idToken = await nextUser.getIdToken()
+            await hydrate(idToken)
+          } catch {
+            // Cart sync is best-effort; local cart still works
           }
         })
         .catch((error: unknown) => {

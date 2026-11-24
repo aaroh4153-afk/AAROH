@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { INSTAGRAM_URL } from '~/data/products'
 import { useStore } from '~/composables/useStore'
+import { useMotion } from '~/composables/useMotion'
 
 const { activeProducts } = useStore()
 const root = ref<HTMLElement | null>(null)
@@ -8,7 +9,27 @@ const { load, prefersReducedMotion } = useMotion()
 
 const featuredPiece = computed(() => activeProducts.value[0])
 const mainImage = '/images/campaign/hoodie-portrait.png'
-const alternateImage = '/images/products/hoodie-hanger-front.png'
+
+const reviews = [
+  {
+    stars: 5,
+    text: 'These hoodies completely set a new benchmark for quality. The 480 GSM fleece drape is structured and heavy without feeling stiff. Clean silhouette and zero shrinkage after weeks of wear.',
+    name: 'Rohit Sharma',
+    role: 'Shopify Developer, Mumbai',
+  },
+  {
+    stars: 5,
+    text: "I've bought luxury hoodies from high-end labels, but AAROH beats them on construction. The double-layered hood and rib cuffs stay pristine after dozens of washes. Definitely worth it.",
+    name: 'Emily Carter',
+    role: 'Ecommerce Designer, Austin',
+  },
+  {
+    stars: 5,
+    text: 'Small batch craftsmanship really shows. The stitch density, custom hardware, and deep royal blue tone look even better in person. The comparison block helped us make the switch.',
+    name: 'Omar Al Fahim',
+    role: 'DTC Brand Owner, Dubai',
+  },
+]
 
 let cleanupMotion: (() => void) | null = null
 
@@ -18,10 +39,10 @@ onMounted(async () => {
 
   const { gsap } = await load()
   const ctx = gsap.context(() => {
-    const revealItems = section.querySelectorAll<HTMLElement>('.story-teaser__reveal')
+    const revealItems = section.querySelectorAll<HTMLElement>('.story-reveal')
     if (revealItems.length) {
       gsap.from(revealItems, {
-        y: 22,
+        y: 24,
         opacity: 0,
         duration: 0.75,
         stagger: 0.08,
@@ -38,238 +59,455 @@ onBeforeUnmount(() => cleanupMotion?.())
 </script>
 
 <template>
-  <section id="story" ref="root" class="story-teaser" aria-labelledby="story-teaser-title">
-    <header class="story-teaser__header">
-      <p class="story-teaser__eyebrow"><i aria-hidden="true" />02 — Our story</p>
-      <NuxtLink class="story-teaser__index-link" to="/story">Read the story <span aria-hidden="true">↗</span></NuxtLink>
-    </header>
+  <section id="story" ref="root" class="story-section" aria-labelledby="story-title">
+    <div class="story-container">
+      <!-- Top Row: Editorial Media + Brand Copy -->
+      <div class="story-hero-grid">
+        <!-- Left Media Box with background image -->
+        <div class="story-media-card story-reveal" :style="{ backgroundImage: `url(${mainImage})` }">
+          <!-- Floating top pill bar -->
+          <div class="story-media-pill" aria-hidden="true">
+            <span class="story-pill-icon">☰</span>
+            <span class="story-pill-logo">✦</span>
+            <span class="story-pill-icon">🔍</span>
+            <span class="story-pill-icon">👤</span>
+            <span class="story-pill-icon">🔖</span>
+            <span class="story-pill-icon">🛍️</span>
+          </div>
 
-    <article class="story-teaser__panel">
-      <figure class="story-teaser__collage story-teaser__reveal">
-        <img :src="mainImage" :alt="`${featuredPiece?.name ?? 'AAROH.'} studio portrait`" loading="lazy" decoding="async" />
-        <img :src="alternateImage" :alt="`${featuredPiece?.name ?? 'AAROH.'} alternate view`" loading="lazy" decoding="async" />
-        <figcaption>Studio notes <span>01 / AAROH.</span></figcaption>
-      </figure>
+          <!-- Center play action -->
+          <div class="story-media-play" aria-hidden="true">
+            <div class="story-play-disc">
+              <svg class="story-play-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
 
-      <section class="story-teaser__copy">
-        <p class="story-teaser__kicker story-teaser__reveal">AAROH. — from the studio</p>
-        <h2 id="story-teaser-title" class="story-teaser__title story-teaser__reveal">
-          Made with intent.<br />
-          <em>Worn every day.</em>
-        </h2>
-        <p class="story-teaser__body story-teaser__reveal">
-          AAROH. began with stacks of fabric and test pieces. Harshikesh kept building; the process is still shared in public.
-        </p>
-        <nav class="story-teaser__actions story-teaser__reveal" aria-label="Our story links">
-          <NuxtLink class="story-teaser__button" to="/story">Our story <span aria-hidden="true">↗</span></NuxtLink>
-          <a class="story-teaser__text-link" :href="INSTAGRAM_URL" target="_blank" rel="noopener">Follow the build</a>
-        </nav>
-      </section>
-    </article>
+          <!-- Bottom bar tags -->
+          <div class="story-media-foot">
+            <span class="story-media-promo">up to 30% off!</span>
+            <span class="story-media-count">02 / 03</span>
+          </div>
+        </div>
+
+        <!-- Right Editorial Column -->
+        <div class="story-copy-col story-reveal">
+          <span class="story-badge">AAROH STUDIO 2026</span>
+
+          <h2 id="story-title" class="story-heading">
+            AAROH | CONSIDERED<br />
+            SILHOUETTES BY THE STUDIO
+          </h2>
+
+          <p class="story-lead">
+            Everyday essentials cut from heavyweight 480 GSM combed cotton. Built in small studio batches
+            with zero compromise, structured drop shoulders, and custom hardware made to last a lifetime.
+          </p>
+
+          <div class="story-actions">
+            <NuxtLink to="/shop" class="story-btn-primary">
+              EXPLORE PIECES &gt;
+            </NuxtLink>
+            <NuxtLink to="/story" class="story-btn-secondary">
+              STUDIO LOOKBOOK →
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lower Row: Rating + 3 Testimonial Cards -->
+      <div class="story-reviews-grid">
+        <!-- Rating Block -->
+        <div class="story-score-card story-reveal">
+          <div class="story-score-num">4.8/5</div>
+          <div class="story-score-stars" aria-label="5 out of 5 stars">
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+          </div>
+          <p class="story-score-note">BASED ON 280+ VERIFIED STUDIO CLIENTS</p>
+        </div>
+
+        <!-- 3 Review Cards -->
+        <div class="story-cards-row">
+          <article v-for="(review, index) in reviews" :key="index" class="story-review-card story-reveal">
+            <div class="story-card-stars" aria-label="5 stars">
+              <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+            </div>
+            <p class="story-card-text">{{ review.text }}</p>
+            <div class="story-card-author">
+              <div class="story-card-name">{{ review.name }}</div>
+              <div class="story-card-role">{{ review.role }}</div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
 <style scoped>
-.story-teaser {
-  padding: clamp(4rem, 8vw, 7rem) var(--gutter);
+.story-section {
+  position: relative;
+  background: #ffffff;
+  color: #111111;
+  padding: clamp(3.5rem, 6vw, 6.5rem) var(--gutter);
   overflow: hidden;
-  background: var(--cream);
-  color: var(--ink);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.story-teaser__header,
-.story-teaser__panel {
-  width: min(100%, var(--max));
+.story-container {
+  max-width: var(--max);
   margin-inline: auto;
-}
-
-.story-teaser__header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: clamp(1.25rem, 2.8vw, 2.5rem);
+  flex-direction: column;
+  gap: clamp(3.5rem, 6vw, 6rem);
 }
 
-.story-teaser__eyebrow,
-.story-teaser__index-link {
+/* --- Hero Grid --- */
+.story-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(2.5rem, 5vw, 6rem);
+}
+
+/* Media Card (Left) */
+.story-media-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.15 / 1;
+  min-height: clamp(320px, 38vw, 540px);
+  background-size: cover;
+  background-position: center top;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 22px;
+}
+
+.story-media-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.05) 30%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+  pointer-events: none;
+}
+
+/* Floating top pill */
+.story-media-pill {
+  position: relative;
+  z-index: 2;
+  align-self: center;
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  margin: 0;
-  color: color-mix(in srgb, var(--ink) 70%, transparent);
-  font-size: 0.66rem;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 8px 18px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  font-size: 0.82rem;
+  color: #111111;
+  user-select: none;
+}
+
+.story-pill-logo {
+  font-size: 0.95rem;
+  color: #000;
   font-weight: 700;
-  letter-spacing: 0.13em;
-  text-decoration: none;
-  text-transform: uppercase;
 }
 
-.story-teaser__eyebrow i {
-  width: 0.45rem;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--lime-strong);
-}
-
-.story-teaser__index-link:hover,
-.story-teaser__text-link:hover {
-  color: var(--primary);
-}
-
-.story-teaser__panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  align-items: center;
-  gap: clamp(2rem, 6vw, 6rem);
-}
-
-.story-teaser__collage {
+/* Center play */
+.story-media-play {
   position: relative;
-  min-height: clamp(20rem, 43vw, 35rem);
-  margin: 0;
-  isolation: isolate;
-}
-
-.story-teaser__collage img {
-  position: absolute;
-  width: 61%;
-  height: 82%;
-  object-fit: cover;
-  object-position: center;
-  border: 0.55rem solid var(--surface);
-  box-shadow: 0 1.4rem 3rem -2rem color-mix(in srgb, var(--ink) 48%, transparent);
-}
-
-.story-teaser__collage img:first-child {
-  top: 0;
-  left: 4%;
-  transform: rotate(-4deg);
-}
-
-.story-teaser__collage img:nth-child(2) {
-  right: 3%;
-  bottom: 1%;
-  width: 48%;
-  height: 63%;
-  transform: rotate(5deg);
-}
-
-.story-teaser__collage figcaption {
-  position: absolute;
-  z-index: 1;
-  right: 4%;
-  bottom: 0;
+  z-index: 2;
   display: flex;
-  gap: 0.75rem;
-  padding: 0.7rem 0.9rem;
-  background: var(--primary);
-  color: var(--white);
-  font-size: 0.61rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.story-play-disc {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #000000;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  transition: transform 0.25s ease, background 0.2s ease;
+}
+
+.story-play-disc:hover {
+  transform: scale(1.08);
+}
+
+.story-play-icon {
+  margin-left: 3px;
+}
+
+/* Bottom tags in media */
+.story-media-foot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  color: #ffffff;
+}
+
+.story-media-promo {
+  font-family: var(--font-logo), 'Space Grotesk', sans-serif;
+  font-size: clamp(1.2rem, 2vw, 1.85rem);
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transform: rotate(-2deg);
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  opacity: 0.92;
 }
 
-.story-teaser__collage figcaption span {
-  color: color-mix(in srgb, var(--white) 74%, transparent);
+.story-media-count {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  opacity: 0.85;
 }
 
-.story-teaser__copy {
-  max-width: 35rem;
-  padding-block: 1.5rem;
+/* Right Column (Editorial) */
+.story-copy-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.story-teaser__kicker {
-  margin: 0;
-  color: var(--heading-rust);
-  font-size: 0.66rem;
+.story-badge {
+  display: inline-block;
+  background: #000000;
+  color: #ffffff;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  padding: 5px 11px;
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
 }
 
-.story-teaser__title {
-  margin: clamp(1rem, 2.4vw, 2rem) 0 0;
-  font-family: var(--font-logo);
-  font-size: clamp(2.8rem, 6.4vw, 6rem);
-  font-weight: 650;
-  letter-spacing: -0.07em;
-  line-height: 0.93;
+.story-heading {
+  font-family: var(--font-logo), 'Space Grotesk', sans-serif;
+  font-size: clamp(2rem, 3.8vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: #000000;
+  margin: 0 0 clamp(1.2rem, 2.2vw, 1.8rem);
 }
 
-.story-teaser__title em {
-  color: var(--primary);
-  font-family: var(--font-serif);
-  font-weight: 400;
+.story-lead {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: clamp(0.82rem, 1vw, 0.92rem);
+  line-height: 1.72;
+  color: #2b2b2b;
+  max-width: 48ch;
+  margin: 0 0 clamp(1.6rem, 2.8vw, 2.4rem);
 }
 
-.story-teaser__body {
-  max-width: 39ch;
-  margin: clamp(1.2rem, 2.4vw, 2rem) 0 0;
-  color: color-mix(in srgb, var(--ink) 72%, transparent);
-  font-size: clamp(0.9rem, 1.1vw, 1.02rem);
-  line-height: 1.65;
-}
-
-.story-teaser__actions {
+.story-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1rem 1.4rem;
-  margin-top: clamp(1.4rem, 2.8vw, 2.25rem);
+  gap: 1.25rem 2rem;
 }
 
-.story-teaser__button {
+.story-btn-primary {
   display: inline-flex;
-  min-height: 2.9rem;
   align-items: center;
-  gap: 1.3rem;
-  padding-inline: 1.1rem;
-  background: var(--ink);
-  color: var(--white);
-  font-size: 0.7rem;
+  background: #000000;
+  color: #ffffff;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  padding: 12px 22px;
   text-decoration: none;
-  text-transform: uppercase;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: transform 0.2s ease, background 0.2s ease;
 }
 
-.story-teaser__button:hover {
-  background: var(--primary);
-  transform: translateY(-0.1rem);
+.story-btn-primary:hover {
+  background: #222222;
+  transform: translateY(-1px);
 }
 
-.story-teaser__text-link {
-  color: var(--ink);
-  font-size: 0.7rem;
+.story-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #000000;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-decoration: underline;
-  text-underline-offset: 0.3em;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.story-btn-secondary:hover {
+  opacity: 0.7;
+}
+
+/* --- Reviews Row --- */
+.story-reviews-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: clamp(2rem, 4vw, 4.5rem);
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.story-score-card {
+  min-width: 170px;
+}
+
+.story-score-num {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: clamp(3rem, 5.5vw, 4.8rem);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: #000000;
+}
+
+.story-score-stars {
+  display: flex;
+  gap: 3px;
+  color: #ff5500;
+  font-size: 1.05rem;
+  margin-top: 10px;
+}
+
+.story-score-note {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #777777;
   text-transform: uppercase;
+  margin-top: 8px;
+  max-width: 18ch;
+  line-height: 1.4;
 }
 
-@media (max-width: 48rem) {
-  .story-teaser__panel {
+.story-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.8rem);
+}
+
+.story-review-card {
+  background: #fdfdfd;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: clamp(16px, 2vw, 24px);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.story-card-stars {
+  display: flex;
+  gap: 2px;
+  color: #ff5500;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+}
+
+.story-card-text {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: clamp(0.74rem, 0.88vw, 0.82rem);
+  line-height: 1.62;
+  color: #2b2b2b;
+  margin: 0 0 16px;
+}
+
+.story-card-author {
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+  padding-top: 10px;
+}
+
+.story-card-name {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.story-card-role {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.7rem;
+  color: #777777;
+  margin-top: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .story-hero-grid {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 2.5rem;
   }
 
-  .story-teaser__collage {
-    min-height: clamp(17rem, 72vw, 29rem);
+  .story-media-card {
+    aspect-ratio: 16 / 10;
+    min-height: 340px;
   }
 
-  .story-teaser__copy {
-    padding-block: 0;
+  .story-reviews-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .story-cards-row {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .story-teaser__button {
-    transition: none;
+@media (max-width: 640px) {
+  .story-media-card {
+    aspect-ratio: 1 / 1;
+    min-height: 290px;
+    padding: 14px 16px;
+  }
+
+  .story-media-pill {
+    padding: 6px 12px;
+    gap: 10px;
+    font-size: 0.72rem;
+  }
+
+  .story-heading {
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
+  }
+
+  .story-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .story-btn-primary,
+  .story-btn-secondary {
+    justify-content: center;
   }
 }
 </style>

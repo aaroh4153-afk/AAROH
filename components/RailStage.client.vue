@@ -304,9 +304,8 @@ function tick() {
     camera.position.x += (followX - camera.position.x) * (isDragging ? 0.2 : 0.085)
     camera.lookAt(camera.position.x, -0.98, 0)
   } else {
-    const targetCamX = inside && !reduceMotion && !isDragging ? pointer.x * 0.15 : 0
-    camera.position.x += (targetCamX - camera.position.x) * 0.05
-    camera.lookAt(camera.position.x, -0.98, 0)
+    camera.position.x = 0
+    camera.lookAt(0, -0.98, 0)
   }
 
   // Keep the framing pleasant when the stage is extremely short.

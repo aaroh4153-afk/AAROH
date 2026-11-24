@@ -638,6 +638,7 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
+  
 }
 
 .rtw-col {
@@ -1358,7 +1359,8 @@ onBeforeUnmount(() => {
     display: flex;
     gap: 12px;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding-bottom: 22px;
+    margin-bottom: -10px;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     background: transparent;
@@ -2026,19 +2028,21 @@ onBeforeUnmount(() => {
     height: auto;
     gap: 12px;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding-bottom: 24px;
+    margin-bottom: -12px;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
   }
 
   .rtw-gallery .rtw-col {
-    flex: 0 0 min(76vw, 300px);
-    height: min(112vw, 400px);
+    flex: 0 0 min(82vw, 320px);
+    height: min(132vw, 470px);
     scroll-snap-align: start;
+    box-sizing: border-box;
   }
 
   .rtw-gallery .rtw-col--active {
-    flex-basis: min(76vw, 300px);
+    flex-basis: min(82vw, 320px);
     flex-grow: 0;
     box-shadow: none;
     transform: none;
@@ -2049,9 +2053,16 @@ onBeforeUnmount(() => {
   }
 
   .rtw-gallery .rtw-gallery__caption {
-    padding: 46px 14px 14px;
+    padding: 34px 16px 18px;
     opacity: 1;
     transform: none;
+  }
+
+  .rtw-gallery .rtw-gallery__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
   }
 
   .rtw-gallery__cta {
@@ -2059,16 +2070,18 @@ onBeforeUnmount(() => {
   }
 
   .rtw-gallery .rtw-quick-add {
-    right: 12px;
-    bottom: 12px;
+    right: 14px;
+    bottom: 14px;
     width: 44px;
     height: 44px;
     min-width: 44px;
+    border-radius: 50%;
     justify-content: center;
     padding: 0;
     opacity: 1;
     pointer-events: auto;
     transform: none;
+    z-index: 6;
   }
 
   .rtw-gallery .rtw-quick-add span {

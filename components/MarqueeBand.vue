@@ -6,12 +6,15 @@ withDefaults(
   }>(),
   {
     items: () => [
-      'Everyday essentials',
-      'Quiet confidence',
-      'The core collection',
-      'Made to be worn',
+      'ARCHITECTURAL SILHOUETTE',
+      '480 GSM HEAVYWEIGHT FLEECE',
+      'ZERO COMPROMISE',
+      'SMALL-BATCH PRODUCTION',
+      'CUSTOM HARDWARE',
+      'CRAFTED IN INDIA',
+      'MADE TO BE WORN',
     ],
-    duration: 34,
+    duration: 32,
   },
 )
 </script>
@@ -33,9 +36,11 @@ withDefaults(
 .marquee {
   position: relative;
   overflow: hidden;
-  border-block: 1.5px solid var(--ink);
-  background: var(--ink);
-  color: var(--cream);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  color: #111111;
+  padding: clamp(10px, 1.2vw, 15px) 0;
 }
 
 .marquee__track {
@@ -51,23 +56,24 @@ withDefaults(
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: clamp(18px, 2.6vw, 38px);
-  padding: clamp(13px, 1.6vw, 21px) clamp(18px, 2.6vw, 38px) clamp(13px, 1.6vw, 21px) 0;
+  gap: clamp(14px, 2vw, 24px);
+  padding-right: clamp(14px, 2vw, 24px);
 }
 
 .marquee__word {
-  font-size: clamp(1.25rem, 2.5vw, 2.35rem);
-  font-stretch: 118%;
-  font-weight: 800;
+  font-family: var(--font-mono), 'Space Mono', 'SF Mono', monospace;
+  font-size: clamp(0.74rem, 1.05vw, 0.92rem);
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.035em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   white-space: nowrap;
+  color: #111111;
 }
 
 .marquee__star {
-  color: var(--sky);
-  font-size: clamp(0.6rem, 1vw, 0.9rem);
+  color: #888888;
+  font-size: clamp(0.6rem, 0.8vw, 0.76rem);
   line-height: 1;
 }
 

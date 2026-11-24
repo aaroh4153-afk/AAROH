@@ -1406,19 +1406,23 @@ onBeforeUnmount(() => {
     display: none;
   }
 
-  .account-btn {
-    width: 2.65rem;
-    height: 2.65rem;
+  .account-btn,
+  .account-btn--signed-in {
+    width: 2.5rem;
+    height: 2.5rem;
+    min-width: 2.5rem;
+    max-width: 2.5rem;
+    aspect-ratio: 1 / 1;
     justify-content: center;
-    padding: 0.25rem;
-    border-radius: 50%;
+    align-items: center;
+    padding: 0;
+    border-radius: 50% !important;
+    overflow: hidden;
   }
 
-  .account-btn--signed-in {
-    width: 2.4rem;
-    min-width: 2.4rem;
-    justify-content: center;
-    padding: 0.2rem;
+  .account-btn__avatar {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
   }
 
@@ -1526,10 +1530,13 @@ onBeforeUnmount(() => {
     gap: 0.25rem;
   }
 
+  .account-btn,
   .account-btn:not(.account-btn--signed-in),
+  .account-btn--signed-in,
   .cart-btn {
     width: 2.2rem;
     height: 2.2rem;
+    border-radius: 50% !important;
   }
 }
 

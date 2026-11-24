@@ -1,376 +1,354 @@
 <script setup lang="ts">
-import { animate, stagger } from 'animejs'
 import { FACEBOOK_URL, INSTAGRAM_URL, TIKTOK_URL } from '../data/products'
-import { useMotion } from '../composables/useMotion'
 
-const root = ref<HTMLElement | null>(null)
-const motionReady = ref(false)
-const revealed = ref(false)
-const { prefersReducedMotion } = useMotion()
+const newsletterEmail = ref('')
+const subscribed = ref(false)
 
-let observer: IntersectionObserver | null = null
-let fallbackTimer: ReturnType<typeof setTimeout> | null = null
-
-function backToTop() {
-  window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+function onSubscribe() {
+  if (!newsletterEmail.value) return
+  subscribed.value = true
+  setTimeout(() => {
+    newsletterEmail.value = ''
+    subscribed.value = false
+  }, 4000)
 }
-
-function reveal() {
-  if (revealed.value) return
-  revealed.value = true
-
-  animate('.footer-reveal', {
-    y: [20, 0],
-    opacity: [0, 1],
-    duration: 700,
-    delay: stagger(55),
-    ease: 'out(3)',
-  })
-}
-
-onMounted(() => {
-  if (prefersReducedMotion()) {
-    revealed.value = true
-    return
-  }
-
-  motionReady.value = true
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) {
-        reveal()
-        observer?.disconnect()
-      }
-    },
-    { threshold: 0.04 },
-  )
-
-  if (root.value) observer.observe(root.value)
-
-  // Safety net: the footer must never stay hidden if the observer misses.
-  fallbackTimer = setTimeout(reveal, 2200)
-})
-
-onBeforeUnmount(() => {
-  observer?.disconnect()
-  if (fallbackTimer) clearTimeout(fallbackTimer)
-})
 </script>
 
 <template>
-  <footer ref="root" class="site-footer" :class="{ 'site-footer--motion': motionReady }">
-    <section class="site-footer__content" aria-label="AAROH. footer information">
-      <header class="site-footer__top">
-        <NuxtLink class="site-footer__logo footer-reveal" to="/" aria-label="AAROH. home">AAROH.</NuxtLink>
-        <p class="site-footer__tagline footer-reveal">Everyday essentials, made to be worn.</p>
+  <footer class="studio-footer" aria-label="AAROH Studio Footer">
+    <div class="studio-footer__wrap">
+      <!-- Top Grid: Newsletter + 4 Link Columns -->
+      <div class="studio-footer__top">
+        <!-- Newsletter Signup -->
+        <div class="studio-footer__newsletter">
+          <p class="studio-footer__nl-title">
+            GET UPDATES AND EXCLUSIVE STUDIO DROPS. JOIN NOW!
+          </p>
 
-        <nav class="site-footer__social footer-reveal" aria-label="Follow AAROH.">
-          <a
-            class="site-footer__social-btn"
-            :href="INSTAGRAM_URL"
-            target="_blank"
-            rel="noopener"
-            aria-label="AAROH. on Instagram"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-              <rect x="3" y="3" width="18" height="18" rx="5" />
-              <circle cx="12" cy="12" r="4" />
-              <circle cx="17.4" cy="6.6" r="1.05" fill="currentColor" stroke="none" />
+          <form class="studio-footer__form" @submit.prevent="onSubscribe">
+            <input
+              v-model="newsletterEmail"
+              type="email"
+              placeholder="Email address"
+              required
+              class="studio-footer__input"
+              aria-label="Email address for studio drops"
+            />
+            <button type="submit" class="studio-footer__btn">
+              {{ subscribed ? 'JOINED!' : 'SIGN UP' }}
+            </button>
+          </form>
+        </div>
+
+        <!-- 4 Columns -->
+        <div class="studio-footer__cols">
+          <div class="studio-footer__col">
+            <h3 class="studio-footer__col-title">Policies</h3>
+            <ul class="studio-footer__list">
+              <li><NuxtLink to="/story">Privacy Policy</NuxtLink></li>
+              <li><NuxtLink to="/story">Refund Policy</NuxtLink></li>
+              <li><NuxtLink to="/story">Support Policy</NuxtLink></li>
+              <li><NuxtLink to="/story">Terms of Services</NuxtLink></li>
+            </ul>
+          </div>
+
+          <div class="studio-footer__col">
+            <h3 class="studio-footer__col-title">Pages</h3>
+            <ul class="studio-footer__list">
+              <li><NuxtLink to="/story">about</NuxtLink></li>
+              <li><NuxtLink to="/#campaign">Documentation</NuxtLink></li>
+              <li><NuxtLink to="/#ready-to-wear">Tutorials</NuxtLink></li>
+              <li><NuxtLink to="/story">Contact</NuxtLink></li>
+            </ul>
+          </div>
+
+          <div class="studio-footer__col">
+            <h3 class="studio-footer__col-title">Themes & Sections</h3>
+            <ul class="studio-footer__list">
+              <li><NuxtLink to="/#ready-to-wear">sections</NuxtLink></li>
+              <li><NuxtLink to="/shop">Themes</NuxtLink></li>
+              <li><NuxtLink to="/shop">All collections</NuxtLink></li>
+            </ul>
+          </div>
+
+          <div class="studio-footer__col">
+            <h3 class="studio-footer__col-title">Earn With Us</h3>
+            <ul class="studio-footer__list">
+              <li><NuxtLink to="/story">Affiliate Program</NuxtLink></li>
+              <li><NuxtLink to="/story">Work with us</NuxtLink></li>
+              <li><NuxtLink to="/story">Become a Partner</NuxtLink></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Giant Wordmark Section -->
+      <div class="studio-footer__wordmark-wrap">
+        <h2 class="studio-footer__wordmark">Aaroh Studio</h2>
+      </div>
+
+      <!-- Bottom Bar: Legal + Social Icons -->
+      <div class="studio-footer__bottom">
+        <div class="studio-footer__legal">
+          <span>© 2026 Aaroh Store, Powered by AAROH</span>
+          <span class="studio-footer__divider"></span>
+          <NuxtLink to="/story">Terms and Policies</NuxtLink>
+        </div>
+
+        <div class="studio-footer__socials" aria-label="Social media channels">
+          <!-- Facebook -->
+          <a :href="FACEBOOK_URL" target="_blank" rel="noopener" aria-label="Facebook">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
             </svg>
           </a>
 
-          <a
-            class="site-footer__social-btn"
-            :href="FACEBOOK_URL"
-            target="_blank"
-            rel="noopener"
-            aria-label="AAROH. on Facebook"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-              <path d="M14.5 8.5h2.3V5.4h-2.6c-2.3 0-3.8 1.5-3.8 3.9v1.8H8v3.2h2.4V21h3.4v-6.7h2.4l.5-3.2h-2.9V9.6c0-.8.3-1.1 1-1.1Z" />
+          <!-- Instagram -->
+          <a :href="INSTAGRAM_URL" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
             </svg>
           </a>
 
-          <a
-            class="site-footer__social-btn"
-            :href="TIKTOK_URL"
-            target="_blank"
-            rel="noopener"
-            aria-label="AAROH. on TikTok"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-              <path d="M14 4v10.2a3.4 3.4 0 1 1-3-3.4" />
-              <path d="M14 4c.4 2.3 1.9 3.7 4.2 4v3a7 7 0 0 1-4.2-1.5" />
+          <!-- YouTube -->
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
           </a>
-        </nav>
 
-        <a class="btn site-footer__cta footer-reveal" :href="INSTAGRAM_URL" target="_blank" rel="noopener">
-          Become a founding member
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-            <path d="M5 12h14" />
-            <path d="m12 5 7 7-7 7" />
-          </svg>
-        </a>
-      </header>
+          <!-- TikTok -->
+          <a :href="TIKTOK_URL" target="_blank" rel="noopener" aria-label="TikTok">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.49 6.27 6.27 0 0 0 1.94-4.49V8.6a8.28 8.28 0 0 0 4.83 1.54V6.69z" />
+            </svg>
+          </a>
 
-      <nav class="site-footer__columns footer-reveal" aria-label="Footer navigation">
-        <span class="site-footer__label">Explore</span>
-        <NuxtLink to="/">Home</NuxtLink>
-        <NuxtLink to="/#ready-to-wear">Shop</NuxtLink>
-        <NuxtLink to="/#categories">Categories</NuxtLink>
-        <NuxtLink to="/#campaign">Campaign</NuxtLink>
-        <NuxtLink to="/dashboard">Brand dashboard</NuxtLink>
-        <NuxtLink to="/admin">Admin console</NuxtLink>
-
-        <span class="site-footer__label">Benefits</span>
-        <NuxtLink to="/#ready-to-wear">Core collection</NuxtLink>
-        <NuxtLink to="/#ready-to-wear">New season</NuxtLink>
-        <NuxtLink to="/story">Our story</NuxtLink>
-        <button type="button" @click="backToTop">Back to top</button>
-
-        <span class="site-footer__label">Contact</span>
-        <a href="mailto:hello@aaroh.in">hello@aaroh.in</a>
-        <a :href="INSTAGRAM_URL" target="_blank" rel="noopener">Instagram</a>
-        <a :href="FACEBOOK_URL" target="_blank" rel="noopener">Facebook</a>
-        <a :href="TIKTOK_URL" target="_blank" rel="noopener">TikTok</a>
-      </nav>
-
-      <section class="site-footer__bottom footer-reveal" aria-label="Copyright and policies">
-        <span>© 2026 AAROH. All rights reserved.</span>
-        <span class="site-footer__legal">
-          <a href="mailto:hello@aaroh.in">Privacy</a>
-          <a href="mailto:hello@aaroh.in">Terms</a>
-        </span>
-        <span>Made with intent in India.</span>
-      </section>
-    </section>
+          <!-- X / Twitter -->
+          <a href="https://x.com" target="_blank" rel="noopener" aria-label="X (formerly Twitter)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
   </footer>
 </template>
 
 <style scoped>
-.site-footer {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  width: 100%;
-  min-height: clamp(35rem, 48vw, 42rem);
-  padding: clamp(3.5rem, 6vw, 5.5rem) var(--gutter) clamp(1.5rem, 2.5vw, 2rem);
+.studio-footer {
+  background: #ffffff;
+  color: #111111;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding: clamp(3.5rem, 6vw, 6rem) var(--gutter) clamp(1.8rem, 3vw, 2.5rem);
   overflow: hidden;
-  background-color: var(--rust);
-  background-image:
-    linear-gradient(
-      108deg,
-      var(--upi-orange) 0%,
-      color-mix(in srgb, var(--red) 72%, var(--upi-orange)) 52%,
-      color-mix(in srgb, var(--rust) 45%, var(--ink)) 100%
-    );
-  color: var(--white);
 }
 
-.site-footer::before {
-  position: absolute;
-  inset-block: 0;
-  right: 0;
-  z-index: 0;
-  width: min(56vw, 48rem);
-  background: url('/images/campaign/yellow-jacket.jpg') 52% 26% / cover no-repeat;
-  content: '';
-  mix-blend-mode: multiply;
-  opacity: 0.82;
-  mask-image: linear-gradient(90deg, transparent 0%, black 24%);
-  pointer-events: none;
-}
-
-.site-footer__content {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 82.5rem;
-  margin: auto;
+.studio-footer__wrap {
+  max-width: var(--max);
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: clamp(2rem, 4vw, 3rem);
 }
 
-.site-footer__top {
+/* Top Section: Newsletter + 4 Columns */
+.studio-footer__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
+  align-items: start;
+  gap: clamp(2rem, 5vw, 6rem);
+}
+
+.studio-footer__newsletter {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: clamp(0.75rem, 1.5vw, 1.15rem);
-  text-align: center;
+  gap: 16px;
 }
 
-.site-footer__logo {
-  color: var(--white);
-  font-family: var(--font-logo);
-  font-size: clamp(3.8rem, 8vw, 7rem);
-  font-weight: 800;
-  line-height: 0.9;
-  letter-spacing: -0.075em;
-  text-decoration: none;
-}
-
-.site-footer__tagline {
-  max-width: 34ch;
-  color: color-mix(in srgb, var(--white) 88%, transparent);
-  font-family: var(--font-outfit);
-  font-size: clamp(0.85rem, 1.2vw, 1rem);
-  line-height: 1.45;
-}
-
-.site-footer__social {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.site-footer__social-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid color-mix(in srgb, var(--white) 48%, transparent);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--white) 8%, transparent);
-  color: var(--white);
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.site-footer__social-btn:hover {
-  background: var(--white);
-  color: var(--red);
-}
-
-.site-footer__cta {
-  display: inline-flex;
-  min-height: 3.25rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.65rem;
-  margin-top: 0.5rem;
-  padding-inline: 1.75rem;
-  border: 1px solid color-mix(in srgb, var(--white) 18%, transparent);
-  border-radius: var(--pill);
-  background: var(--ink);
-  color: var(--white);
-  font-size: 0.82rem;
-  text-decoration: none;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.site-footer__cta:hover {
-  transform: translateY(-0.125rem);
-  background: color-mix(in srgb, var(--ink) 82%, var(--red));
-}
-
-.site-footer__columns {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.8rem clamp(0.85rem, 1.8vw, 1.6rem);
-  padding-block: clamp(1.35rem, 2.6vw, 2rem);
-  border-block: 1px solid color-mix(in srgb, var(--white) 27%, transparent);
-}
-
-.site-footer__label {
-  margin-inline-start: 0.45rem;
-  color: color-mix(in srgb, var(--white) 70%, transparent);
-  font-size: 0.58rem;
+.studio-footer__nl-title {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  line-height: 1.2;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  color: #111111;
+  max-width: 28ch;
+  margin: 0;
+}
+
+.studio-footer__form {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.studio-footer__input {
+  background: transparent;
+  border: 1px solid #d4d4d4;
+  border-right: none;
+  padding: 10px 14px;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.78rem;
+  color: #111111;
+  outline: none;
+  width: min(100%, 220px);
+  border-radius: 0;
+  transition: border-color 0.2s;
+}
+
+.studio-footer__input:focus {
+  border-color: #000000;
+}
+
+.studio-footer__btn {
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+  padding: 10px 16px;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.site-footer__columns a,
-.site-footer__columns button {
-  position: relative;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--white);
-  font-family: var(--font-outfit);
-  font-size: clamp(0.78rem, 1vw, 0.9rem);
-  font-weight: 400;
-  line-height: 1.4;
-  text-align: left;
-  text-decoration: none;
   cursor: pointer;
+  border-radius: 0;
+  white-space: nowrap;
+  transition: background 0.2s ease;
 }
 
-.site-footer__columns a:hover,
-.site-footer__columns button:hover {
+.studio-footer__btn:hover {
+  background: #2b2b2b;
+}
+
+/* 4 Columns */
+.studio-footer__cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1rem, 2.5vw, 2.5rem);
+}
+
+.studio-footer__col-title {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #111111;
+  margin: 0 0 16px;
+}
+
+.studio-footer__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.studio-footer__list a {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.72rem;
+  color: #444444;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.studio-footer__list a:hover {
+  color: #000000;
   text-decoration: underline;
-  text-underline-offset: 0.25em;
 }
 
-.site-footer__bottom {
+/* Giant Wordmark */
+.studio-footer__wordmark-wrap {
+  width: 100%;
+  margin: clamp(2.5rem, 6vw, 5rem) 0 clamp(1.5rem, 3.5vw, 3rem);
+  overflow: hidden;
+}
+
+.studio-footer__wordmark {
+  font-family: var(--font-logo), 'Space Grotesk', -apple-system, sans-serif;
+  font-size: clamp(3.6rem, 15vw, 15.5rem);
+  font-weight: 550;
+  line-height: 0.86;
+  letter-spacing: -0.055em;
+  color: #111111;
+  margin: 0;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Bottom Bar */
+.studio-footer__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.studio-footer__legal {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.7rem 1.5rem;
-  color: color-mix(in srgb, var(--white) 78%, transparent);
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
+  gap: 8px 14px;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.7rem;
+  color: #666666;
 }
 
-.site-footer__legal {
-  display: flex;
-  gap: 1rem;
-}
-
-.site-footer__legal a {
-  color: inherit;
+.studio-footer__legal a {
+  color: #666666;
   text-decoration: none;
 }
 
-.site-footer__legal a:hover {
-  color: var(--white);
+.studio-footer__legal a:hover {
+  color: #000000;
   text-decoration: underline;
-  text-underline-offset: 0.25em;
 }
 
-.site-footer--motion .footer-reveal {
-  opacity: 0;
+.studio-footer__socials {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #111111;
 }
 
-@media (max-width: 47.5rem) {
-  .site-footer {
-    min-height: 35rem;
-    padding-block: 3.5rem 1.5rem;
+.studio-footer__socials a {
+  color: #111111;
+  display: inline-flex;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.studio-footer__socials a:hover {
+  opacity: 0.6;
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .studio-footer__top {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
   }
 
-  .site-footer::before {
-    width: 100%;
-    opacity: 0.38;
-    background-position: 62% 24%;
-    mask-image: linear-gradient(180deg, black 0%, transparent 92%);
-  }
-
-  .site-footer__content {
+  .studio-footer__cols {
+    grid-template-columns: repeat(2, 1fr);
     gap: 2rem;
   }
-
-  .site-footer__columns {
-    gap: 0.85rem 1rem;
-    padding-block: 1.5rem;
-  }
-
-  .site-footer__bottom {
-    justify-content: center;
-    text-align: center;
-  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .site-footer--motion .footer-reveal {
-    opacity: 1;
+@media (max-width: 600px) {
+  .studio-footer__cols {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .studio-footer__bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
   }
 }
 </style>

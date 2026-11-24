@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import { products as seedProducts } from '~/data/products'
 import { getHeroRailImages } from '~/utils/productDisplayImages'
 
 const active = defineModel<number>('active', { default: 0 })
 
 const store = useStore()
-const liveRail = store.products.value.filter(
-  (product) => product.rail && product.status === 'active',
-)
+function resolveRailProducts() {
+  const activeRail = store.products.value.filter(
+    (product) => product.rail && product.status === 'active',
+  )
+  if (activeRail.length > 0) return activeRail
+  return seedProducts.filter((product) => product.rail && product.status === 'active')
+}
+
+const liveRail = resolveRailProducts()
 const products = liveRail.map((product) => ({
   ...product,
   images: getHeroRailImages(product),
@@ -19,8 +26,8 @@ const failed = ref(false)
 
 const SPACING = 0.88
 const FOV = 28
-const PLANE_WIDTH = 1.18
-const PLANE_HEIGHT = 1.58
+const PLANE_WIDTH = 1.48
+const PLANE_HEIGHT = 1.98
 const MAX_INDEX = Math.max(products.length - 1, 0)
 const DEFAULT_CURSOR = 'grab'
 
@@ -277,7 +284,9 @@ function tick() {
     slot.item.position.z = slot.currentZ
 
     slot.item.rotation.y = slot.currentRotY
-    slot.item.rotation.z = 0
+    slot.item.rotation.z = reduceMotion
+      ? 0
+      : Math.sin(performance.now() * 0.0009 + i * 0.6) * 0.035
     slot.item.scale.setScalar(slot.currentScale)
 
     slot.frontMesh.material.opacity = slot.viewBlend
@@ -301,11 +310,11 @@ function tick() {
     }
     const followX = activeSlot ? activeSlot.baseX + dragFollow : 0
     camera.position.x += (followX - camera.position.x) * (isDragging ? 0.2 : 0.085)
-    camera.lookAt(camera.position.x, -0.78, 0)
+    camera.lookAt(camera.position.x, -0.98, 0)
   } else {
     const targetCamX = inside && !reduceMotion && !isDragging ? pointer.x * 0.35 : 0
     camera.position.x += (targetCamX - camera.position.x) * 0.05
-    camera.lookAt(0, -0.78, 0)
+    camera.lookAt(0, -1.65, 0)
   }
 
   // Keep the framing pleasant when the stage is extremely short.
@@ -666,55 +675,91 @@ onBeforeUnmount(dispose)
 }
 
 .rail-fallback {
+  position: relative;
   display: flex;
   width: 100%;
   height: 100%;
-  align-items: center;
-  justify-content: center;
-  gap: 1%;
-  padding: 5%;
+  align-items: flex-start;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 4% 33% 0;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.rail-fallback::-webkit-scrollbar {
+  display: none;
+}
+
+.rail-fallback::before {
+  position: absolute;
+  top: 8%;
+  right: 8%;
+  left: 8%;
+  z-index: 0;
+  height: 0.32rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #9a6a3e, #4e2d14 58%, #2f1c0d);
+  box-shadow: 0 0.15rem 0.25rem rgb(0 0 0 / 18%);
+  content: '';
 }
 
 .rail-fallback__item {
   display: flex;
-  width: 16%;
-  max-width: 130px;
-  height: 82%;
-  align-items: center;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  flex: 0 0 100%;
+  align-items: flex-start;
   justify-content: center;
   margin: 0;
   opacity: 0.78;
   transform: scale(0.94);
   transition: transform 0.3s ease, opacity 0.3s ease;
+  scroll-snap-align: center;
 }
 
 .rail-fallback__item img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center top;
 }
 
 .rail-fallback__item--active {
   opacity: 1;
-  transform: scale(1.04);
+  animation: rail-fallback-sway 4.8s ease-in-out infinite;
+  transform-origin: 50% 8%;
+}
+
+@keyframes rail-fallback-sway {
+  0%,
+  100% {
+    transform: scale(1.04) rotate(0deg);
+  }
+
+  50% {
+    transform: scale(1.04) rotate(1.4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-fallback__item,
+  .rail-fallback__item--active {
+    animation: none;
+  }
 }
 
 @media (max-width: 819px) {
   .rail-stage--fallback .rail-fallback {
-    justify-content: flex-start;
-    gap: 0.75rem;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
     padding-inline: 12%;
-    scroll-snap-type: x mandatory;
   }
 
   .rail-stage--fallback .rail-fallback__item {
-    width: 76%;
-    max-width: none;
+    width: 100%;
     height: 90%;
-    flex: 0 0 76%;
-    scroll-snap-align: center;
+    flex: 0 0 100%;
   }
 }
 </style>

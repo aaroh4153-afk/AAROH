@@ -1,8 +1,7 @@
 import type { Product } from '~/data/products'
-import blueHoodieMockup from '~/Blue Aaroh Hoodie Mockup.png'
 
 const blueHoodieRailImages = [
-  blueHoodieMockup,
+  '/images/products/hoodie-hanger-front.png',
   '/images/products/hoodie-side.png',
 ]
 

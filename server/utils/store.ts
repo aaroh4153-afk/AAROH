@@ -1,20 +1,24 @@
 import { createError } from 'h3'
 import type { PoolClient } from 'pg'
-import type {
-  Category,
-  Collection,
-  Product,
-  ProductSize,
-  ProductStatus,
-  SizeName,
+import {
+  categories as seedCategories,
+  collections as seedCollections,
+  products as seedProducts,
+  type Category,
+  type Collection,
+  type Product,
+  type ProductSize,
+  type ProductStatus,
+  type SizeName,
 } from '~/data/products'
-import type {
-  Customer,
-  DeliveryStatus,
-  Order,
-  OrderItem,
-  PaymentMethod,
-  PaymentStatus,
+import {
+  seedOrders,
+  type Customer,
+  type DeliveryStatus,
+  type Order,
+  type OrderItem,
+  type PaymentMethod,
+  type PaymentStatus,
 } from '~/data/orders'
 import { deliveryStatuses, paymentStatuses } from '~/data/orders'
 import type { StorePayload } from '~/data/store'
@@ -23,7 +27,7 @@ import {
   normalizeSettings,
   type StoreSettings,
 } from '~/data/settings'
-import { query, resetDatabase, withTransaction } from './db'
+import { hasDatabase, query, resetDatabase, withTransaction } from './db'
 
 interface CategoryRow {
   id: string
@@ -347,15 +351,36 @@ export async function saveSettings(input: unknown): Promise<StoreSettings> {
 }
 
 export async function loadStore(): Promise<StorePayload> {
-  const [products, orders, categories, collections, settings] = await Promise.all([
-    loadProducts(),
-    loadOrders(),
-    loadCategories(),
-    loadCollections(),
-    loadSettings(),
-  ])
+  if (!hasDatabase()) {
+    return {
+      products: seedProducts,
+      orders: seedOrders,
+      categories: seedCategories,
+      collections: seedCollections,
+      settings: defaultSettings,
+    }
+  }
 
-  return { products, orders, categories, collections, settings }
+  try {
+    const [products, orders, categories, collections, settings] = await Promise.all([
+      loadProducts(),
+      loadOrders(),
+      loadCategories(),
+      loadCollections(),
+      loadSettings(),
+    ])
+
+    return { products, orders, categories, collections, settings }
+  } catch (error) {
+    console.warn('[aaroh/store] Database unavailable; serving seed catalogue.', error)
+    return {
+      products: seedProducts,
+      orders: seedOrders,
+      categories: seedCategories,
+      collections: seedCollections,
+      settings: defaultSettings,
+    }
+  }
 }
 
 export async function upsertProduct(product: Product): Promise<Product> {

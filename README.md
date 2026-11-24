@@ -1,12 +1,31 @@
 # AAROH. site
 
-Vue 3 on Nuxt 3, with a Three.js clothes rail. The home page is prerendered to static HTML, so search engines get the headings, product names and copy without running any JavaScript. The 3D rail only loads in the browser.
+Vue 3 on Nuxt 3, with a Three.js clothes rail and a Neon-backed studio. Catalogue, orders and settings are stored in PostgreSQL and read on the server, so the storefront and dashboard always show live data.
 
 ## Run it
 
     npm install
     npm run dev        # local preview at http://localhost:3000
-    npm run generate   # static site in .output/public, deployable to any static host
+    npm run build      # production server bundle in .output
+    npm run start      # serve the built site
+
+Copy `.env.example` to `.env` and fill in `DATABASE_URL` before starting the studio. The schema is created and seeded automatically on first request when the database is empty.
+
+## Deploy to Render
+
+Use a **Node Web Service**, not a static site: the API routes, Neon reads and writes, auth sync and dashboard updates all need the Nitro server.
+
+1. Create a Blueprint from this repo, or point Render at it manually. `render.yaml` is included.
+2. Build command: `npm ci && npm run build`
+3. Start command: `npm run start`
+4. Health check path: `/api/health` (verifies the PostgreSQL connection)
+5. Add these environment variables in the Render dashboard:
+   - `DATABASE_URL` — the Neon pooled connection string, including `sslmode=require`
+   - `NUXT_PUBLIC_SITE_URL` — the live origin, for example `https://aaroh.in`
+   - `NUXT_FIREBASE_SERVICE_ACCOUNT_JSON`, `NUXT_STUDIO_ADMIN_EMAIL` and the `NUXT_SMTP_*` values when email verification is enabled
+6. Deploy. Public files in `public/` (including the hanger photography) are served from the same Node service, so no separate static site or rewrite rule is needed.
+
+The old `RENDER_STATIC_SITE=true` path only produces a frontend preview and omits the API, account and dashboard routes. Do not use it for the live store.
 
 ## Where things live
 

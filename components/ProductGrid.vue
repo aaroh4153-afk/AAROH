@@ -42,6 +42,33 @@ const displayedProducts = computed(() =>
 )
 const activeFilters = computed(() => isFiltering.value || inStockOnly.value)
 
+/** The home page presents the edit as an expanding gallery; filters fall back to a grid. */
+const HOME_GALLERY_LIMIT = 8
+const galleryMode = computed(() => !props.fullPage && !activeFilters.value)
+const visibleProducts = computed(() =>
+  galleryMode.value ? displayedProducts.value.slice(0, HOME_GALLERY_LIMIT) : displayedProducts.value,
+)
+const activeGalleryId = ref('')
+
+function setGalleryActive(id: string) {
+  if (!galleryMode.value) return
+  activeGalleryId.value = id
+}
+
+function categoryName(id: string) {
+  return categories.value.find((entry) => entry.id === id)?.name ?? 'Collection'
+}
+
+watch(
+  visibleProducts,
+  (list) => {
+    if (!list.some((product) => product.id === activeGalleryId.value)) {
+      activeGalleryId.value = list[0]?.id ?? ''
+    }
+  },
+  { immediate: true },
+)
+
 const categoryCounts = computed(() => {
   const counts: Record<string, number> = {}
   for (const product of storefrontProducts.value) {
@@ -321,21 +348,31 @@ onBeforeUnmount(() => {
 
     <div
       class="rtw-grid-container"
-      :class="{ 'rtw-grid-container--filtered': activeFilters }"
+      :class="{
+        'rtw-grid-container--filtered': activeFilters,
+        'rtw-grid-container--gallery': galleryMode,
+      }"
     >
       <div
-        v-if="displayedProducts.length"
+        v-if="visibleProducts.length"
         class="rtw-grid"
-        :class="{ 'rtw-grid--filtered': activeFilters }"
+        :class="{
+          'rtw-grid--filtered': activeFilters,
+          'rtw-gallery': galleryMode,
+        }"
       >
         <article
-          v-for="product in displayedProducts"
+          v-for="(product, index) in visibleProducts"
           :key="product.id"
           class="rtw-col"
-          :class="{ 'rtw-col--black-hoodle': product.id === 'black-hoodle' }"
+          :class="{
+            'rtw-col--black-hoodle': product.id === 'black-hoodle',
+            'rtw-col--active': galleryMode && activeGalleryId === product.id,
+          }"
           :style="{ '--tint': product.hex }"
-          @mouseenter="setCardHoverView(product.id, true)"
+          @mouseenter="setGalleryActive(product.id); setCardHoverView(product.id, true)"
           @mouseleave="setCardHoverView(product.id, false)"
+          @focusin="setGalleryActive(product.id)"
         >
           <div class="rtw-card__image-box">
             <img
@@ -392,6 +429,24 @@ onBeforeUnmount(() => {
               </svg>
               <span>{{ stockState(product) === 'out' ? 'Sold out' : 'Add to cart' }}</span>
             </button>
+
+            <template v-if="galleryMode">
+              <span class="rtw-gallery__index">0{{ index + 1 }}</span>
+              <span class="rtw-gallery__spine">{{ product.name }}</span>
+
+              <div class="rtw-gallery__caption">
+                <p class="rtw-gallery__eyebrow">{{ categoryName(product.category) }} · {{ product.colour }}</p>
+                <h3 class="rtw-gallery__name">{{ product.name }}</h3>
+                <p class="rtw-gallery__meta">{{ availableSizeLabel(product) }}</p>
+                <div class="rtw-gallery__foot">
+                  <span class="rtw-gallery__price">
+                    {{ formatPrice(product.price) }}
+                    <s v-if="product.compareAtPrice">{{ formatPrice(product.compareAtPrice) }}</s>
+                  </span>
+                  <span class="rtw-gallery__cta">View piece <span aria-hidden="true">↗</span></span>
+                </div>
+              </div>
+            </template>
           </div>
 
           <NuxtLink
@@ -402,7 +457,7 @@ onBeforeUnmount(() => {
             @focusout="activeView[product.id] = 'front'"
           />
 
-          <div class="rtw-card__footer">
+          <div v-if="!galleryMode" class="rtw-card__footer">
             <div class="rtw-card__text">
               <h3 class="rtw-card__name">{{ product.name }}</h3>
               <p class="rtw-card__meta" :class="{ 'rtw-card__meta--low': stockState(product) === 'low' }">
@@ -599,6 +654,249 @@ onBeforeUnmount(() => {
 .rtw-col--black-hoodle {
   z-index: 1;
   box-shadow: 0 0.35rem 1rem -0.3rem color-mix(in srgb, var(--ink) 34%, transparent);
+}
+
+/* Home gallery — tall strips that expand under the pointer. */
+.rtw-grid-container--gallery {
+  border: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.rtw-grid.rtw-gallery {
+  display: flex;
+  gap: 10px;
+  overflow: hidden;
+  height: clamp(360px, 40vw, 540px);
+  background: transparent;
+}
+
+.rtw-gallery .rtw-col {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--card);
+  cursor: pointer;
+  container-type: inline-size;
+  transition:
+    flex-grow 0.78s cubic-bezier(0.22, 0.61, 0.36, 1),
+    border-color 0.35s ease,
+    box-shadow 0.45s ease,
+    transform 0.45s var(--ease);
+}
+
+/* Keep the studio badge out of the gallery index. */
+.rtw-gallery .rtw-card__badge {
+  display: none;
+}
+
+.rtw-gallery .rtw-col--active {
+  z-index: 2;
+  flex-grow: 3.6;
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--line));
+  box-shadow: 0 28px 54px -44px color-mix(in srgb, var(--ink) 62%, transparent);
+  transform: translateY(-3px);
+}
+
+.rtw-gallery .rtw-card__image-box {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  padding: 0;
+  background:
+    radial-gradient(118% 72% at 50% 10%, #fff 0%, rgba(255, 255, 255, 0) 68%),
+    linear-gradient(180deg, #fff 0%, color-mix(in srgb, var(--tint) 10%, #f5f5f3) 100%);
+  transition: background 0.45s ease;
+}
+
+.rtw-gallery .rtw-col--active .rtw-card__image-box {
+  background:
+    radial-gradient(118% 72% at 50% 10%, #fff 0%, rgba(255, 255, 255, 0) 66%),
+    linear-gradient(180deg, #fff 0%, color-mix(in srgb, var(--tint) 16%, #f2f2f0) 100%);
+}
+
+.rtw-gallery .rtw-img {
+  inset: 8% 7% 11%;
+  width: 86%;
+  height: 81%;
+  object-fit: contain;
+  transition: opacity 0.42s var(--ease), transform 0.62s var(--ease);
+}
+
+.rtw-gallery .rtw-col--active .rtw-img--front,
+.rtw-gallery .rtw-col--active .rtw-img--visible {
+  transform: scale(1.035);
+}
+
+.rtw-gallery__index {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  color: color-mix(in srgb, var(--ink) 52%, transparent);
+  font-family: var(--font-outfit);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.rtw-gallery__spine {
+  position: absolute;
+  bottom: 16px;
+  left: 14px;
+  z-index: 2;
+  max-height: calc(100% - 64px);
+  overflow: hidden;
+  color: color-mix(in srgb, var(--ink) 76%, transparent);
+  font-family: var(--font-logo);
+  font-size: 0.62rem;
+  font-stretch: 86%;
+  font-weight: 650;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  transition: opacity 0.28s ease;
+}
+
+.rtw-gallery .rtw-col--active .rtw-gallery__spine {
+  opacity: 0;
+}
+
+@container (max-width: 250px) {
+  .rtw-gallery__spine {
+    display: none;
+  }
+}
+
+.rtw-gallery__caption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: grid;
+  gap: 5px;
+  padding: 54px 18px 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.92) 42%,
+    #fff 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity 0.35s ease, transform 0.5s var(--ease);
+}
+
+.rtw-gallery .rtw-col--active .rtw-gallery__caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.rtw-gallery__eyebrow {
+  color: color-mix(in srgb, var(--ink) 58%, transparent);
+  font-family: var(--font-outfit);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.rtw-gallery__name {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-logo);
+  font-size: clamp(1.05rem, 1.45vw, 1.4rem);
+  font-stretch: 96%;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.rtw-gallery__meta {
+  color: color-mix(in srgb, var(--ink) 62%, transparent);
+  font-family: var(--font-outfit);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.rtw-gallery__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 3px;
+}
+
+.rtw-gallery__price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  color: var(--ink);
+  font-family: var(--font-outfit);
+  font-size: 0.82rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.rtw-gallery__price s {
+  color: color-mix(in srgb, var(--ink) 42%, transparent);
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.rtw-gallery__cta {
+  color: var(--primary);
+  font-family: var(--font-outfit);
+  font-size: 0.56rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rtw-gallery .rtw-view-btn {
+  top: 14px;
+  right: 14px;
+  z-index: 4;
+}
+
+.rtw-gallery .rtw-col--active .rtw-view-btn {
+  opacity: 1;
+}
+
+.rtw-gallery .rtw-quick-add {
+  right: 16px;
+  bottom: 64px;
+  left: auto;
+  z-index: 5;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--white);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+}
+
+.rtw-gallery .rtw-col--active .rtw-quick-add {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.rtw-gallery .rtw-col--active .rtw-quick-add:hover {
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 .rtw-open {
@@ -1693,5 +1991,92 @@ onBeforeUnmount(() => {
   animation: none;
   scroll-behavior: auto;
   transition: none;
+}
+
+@media (max-width: 1080px) {
+  .rtw-grid.rtw-gallery {
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .rtw-grid.rtw-gallery::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rtw-gallery .rtw-col {
+    flex: 0 0 clamp(150px, 22vw, 230px);
+    scroll-snap-align: start;
+    transition:
+      flex-basis 0.72s cubic-bezier(0.22, 0.61, 0.36, 1),
+      border-color 0.35s ease,
+      box-shadow 0.45s ease,
+      transform 0.45s var(--ease);
+  }
+
+  .rtw-gallery .rtw-col--active {
+    flex-basis: clamp(280px, 38vw, 420px);
+    flex-grow: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .rtw-grid.rtw-gallery {
+    height: auto;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .rtw-gallery .rtw-col {
+    flex: 0 0 min(76vw, 300px);
+    height: min(112vw, 400px);
+    scroll-snap-align: start;
+  }
+
+  .rtw-gallery .rtw-col--active {
+    flex-basis: min(76vw, 300px);
+    flex-grow: 0;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .rtw-gallery__spine {
+    display: none;
+  }
+
+  .rtw-gallery .rtw-gallery__caption {
+    padding: 46px 14px 14px;
+    opacity: 1;
+    transform: none;
+  }
+
+  .rtw-gallery__cta {
+    display: none;
+  }
+
+  .rtw-gallery .rtw-quick-add {
+    right: 12px;
+    bottom: 12px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    justify-content: center;
+    padding: 0;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .rtw-gallery .rtw-quick-add span {
+    display: none;
+  }
+
+  .rtw-gallery .rtw-view-btn {
+    opacity: 1;
+  }
 }
 </style>

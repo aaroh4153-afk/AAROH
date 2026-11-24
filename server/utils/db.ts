@@ -13,9 +13,19 @@ const { Pool } = pg
 let pool: PgPool | null = null
 let ready: Promise<void> | null = null
 
+export function hasDatabase(): boolean {
+  try {
+    const config = useRuntimeConfig()
+    return Boolean(String(process.env.DATABASE_URL || config.databaseUrl || '').trim())
+  } catch {
+    return Boolean(String(process.env.DATABASE_URL || '').trim())
+  }
+}
+
 function connectionString(): string {
   const config = useRuntimeConfig()
-  const value = String(config.databaseUrl || process.env.DATABASE_URL || '').trim()
+  // Render injects DATABASE_URL at runtime; prefer it over any build-time value.
+  const value = String(process.env.DATABASE_URL || config.databaseUrl || '').trim()
 
   if (!value) {
     throw new Error(
@@ -149,6 +159,10 @@ async function createSchema(client: PoolClient): Promise<void> {
     CREATE INDEX IF NOT EXISTS product_sizes_product_idx ON product_sizes(product_id);
     CREATE INDEX IF NOT EXISTS orders_placed_at_idx ON orders(placed_at DESC);
     CREATE INDEX IF NOT EXISTS order_items_order_idx ON order_items(order_id);
+
+    -- Existing Neon databases predate the welcome-email columns; add them in place.
+    ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS welcome_email_claimed_at timestamptz;
+    ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS welcome_email_sent_at timestamptz;
   `)
 }
 

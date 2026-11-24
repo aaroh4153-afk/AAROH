@@ -502,13 +502,13 @@ onBeforeUnmount(() => {
   align-items: baseline;
   justify-self: center;
   padding-inline: 8px;
-  color: var(--ink);
+  color: var(--primary);
   font-family: var(--font-logo);
   font-size: clamp(1.45rem, 2.2vw, 1.85rem);
-  font-stretch: 125%;
-  font-weight: 500;
+  font-stretch: 118%;
+  font-weight: 750;
   line-height: 1;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.07em;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -533,7 +533,7 @@ onBeforeUnmount(() => {
   display: block;
   width: 0.17em;
   height: 0.17em;
-  background: var(--ink);
+  background: var(--primary);
   transform: translateY(-0.02em);
 }
 

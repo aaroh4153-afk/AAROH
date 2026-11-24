@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+const renderStaticSite = process.env.RENDER_STATIC_SITE === 'true'
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   css: [
@@ -30,7 +32,7 @@ export default defineNuxtConfig({
     smtpFrom: '',
     public: {
       // Set this to the live domain before launch. Used for canonical, Open Graph and structured data.
-      siteUrl: 'https://aaroh.in',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://aaroh.in',
       firebaseApiKey: process.env.NUXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyAC4rn9alNVXDFkbNGCM4vgBD_-aEuMae8',
       firebaseAuthDomain: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'aaroh-d9cdb.firebaseapp.com',
       firebaseProjectId: process.env.NUXT_PUBLIC_FIREBASE_PROJECT_ID || 'aaroh-d9cdb',
@@ -54,7 +56,7 @@ export default defineNuxtConfig({
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Outfit:wght@100..900&display=swap',
         },
       ],
     },
@@ -71,6 +73,12 @@ export default defineNuxtConfig({
   // Pages read live catalogue and order data, so render them on the server
   // instead of baking a snapshot into the build.
   nitro: {
-    prerender: { crawlLinks: false, routes: [] },
+    prerender: renderStaticSite
+      ? {
+          crawlLinks: true,
+          routes: ['/'],
+          ignore: ['/account', '/admin', '/dashboard', '/api'],
+        }
+      : { crawlLinks: false, routes: [] },
   },
 })

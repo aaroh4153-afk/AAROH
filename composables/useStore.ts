@@ -1,5 +1,8 @@
 import { computed } from 'vue'
 import {
+  categories as seedCategories,
+  collections as seedCollections,
+  products as seedProducts,
   stockState,
   totalStock,
   type Category,
@@ -8,6 +11,7 @@ import {
   type ProductSize,
 } from '~/data/products'
 import {
+  seedOrders,
   type DeliveryStatus,
   type Order,
   type PaymentStatus,
@@ -65,11 +69,11 @@ export type ProductDraft = Omit<Product, 'id' | 'createdAt' | 'sku'> & {
  * local refs immediately and writes through to the Nitro API in the background.
  */
 export const useStore = () => {
-  const products = useState<Product[]>('studio-products', () => [])
-  const orders = useState<Order[]>('studio-orders', () => [])
+  const products = useState<Product[]>('studio-products', () => seedProducts.map(cloneProduct))
+  const orders = useState<Order[]>('studio-orders', () => seedOrders.map((o) => ({ ...o, items: [...o.items] })))
 
-  const categoryList = useState<Category[]>('studio-categories', () => [])
-  const collectionList = useState<Collection[]>('studio-collections', () => [])
+  const categoryList = useState<Category[]>('studio-categories', () => [...seedCategories])
+  const collectionList = useState<Collection[]>('studio-collections', () => [...seedCollections])
   const settings = useState<StoreSettings>('studio-settings', () =>
     cloneSettings(defaultSettings),
   )
@@ -77,13 +81,23 @@ export const useStore = () => {
   async function refreshFromDatabase() {
     try {
       const data = await $fetch<StorePayload>('/api/store')
-      products.value = data.products
-      orders.value = data.orders
-      categoryList.value = data.categories
-      collectionList.value = data.collections
-      settings.value = data.settings
+      if (data && Array.isArray(data.products) && data.products.length > 0) {
+        products.value = data.products
+      }
+      if (data && Array.isArray(data.orders)) {
+        orders.value = data.orders
+      }
+      if (data && Array.isArray(data.categories) && data.categories.length > 0) {
+        categoryList.value = data.categories
+      }
+      if (data && Array.isArray(data.collections) && data.collections.length > 0) {
+        collectionList.value = data.collections
+      }
+      if (data?.settings) {
+        settings.value = data.settings
+      }
     } catch (error) {
-      console.error('[aaroh/store] Could not refresh from the database.', error)
+      console.warn('[aaroh/store] Could not refresh from the database; using seed catalogue.', error)
     }
   }
 

@@ -234,33 +234,37 @@ function tick() {
     let targetRotY = 0
     let targetZ = 0
     let targetXOffset = 0
-    let targetBlend = products.length > 1 ? 1 : 0
+    let targetBlend = 0
     let targetScale = 1
 
     if (!reduceMotion) {
-      if (products.length === 1) {
-        targetBlend = hovered >= 0 ? 1 : 0
+      if (hovered < 0 && active.value < 0) {
+        // When nothing is hovered or selected, all show side profile along the rail
+        targetBlend = 0
+        targetRotY = 0.85
       } else if (i === currentTarget) {
-        targetZ = 0.05
-        targetBlend = 1
-        targetScale = 1.04
+        targetZ = 0.08
+        targetBlend = 1 // Face front!
+        targetScale = 1.05
+        targetRotY = 0
       } else if (i < currentTarget) {
         const diff = currentTarget - i
-        targetRotY = Math.min(1.05, 0.65 + diff * 0.08)
+        targetRotY = Math.min(1.15, 0.72 + diff * 0.08)
         targetZ = -0.05
         targetXOffset = -0.16 - (diff === 1 ? 0.08 : 0)
-        targetBlend = 0
+        targetBlend = 0 // Face side
         targetScale = 0.98
       } else {
         const diff = i - currentTarget
-        targetRotY = -Math.min(1.05, 0.65 + diff * 0.08)
+        targetRotY = -Math.min(1.15, 0.72 + diff * 0.08)
         targetZ = -0.05
         targetXOffset = 0.16 + (diff === 1 ? 0.08 : 0)
-        targetBlend = 0
+        targetBlend = 0 // Face side
         targetScale = 0.98
       }
     } else if (i === currentTarget) {
       targetScale = 1.02
+      targetBlend = 1
     }
 
     // One damped factor keeps every property stable on 60/120/144Hz displays.
@@ -484,7 +488,7 @@ function toggleFallbackView(productId: string) {
   const product = products.find((entry) => entry.id === productId)
   if (!product || product.images.length < 2) return
 
-  fallbackViews.value[productId] = fallbackViews.value[productId] === 'side' ? 'front' : 'side'
+  fallbackViews.value[productId] = fallbackViews.value[productId] === 'front' ? 'side' : 'front'
 }
 
 function onContextLost(event: Event) {
@@ -661,10 +665,12 @@ onBeforeUnmount(dispose)
         :key="product.id"
         class="rail-fallback__item"
         :class="{ 'rail-fallback__item--active': index === active }"
+        @mouseenter="fallbackViews[product.id] = 'front'; active = index"
+        @mouseleave="fallbackViews[product.id] = 'side'"
         @click="active = index; toggleFallbackView(product.id)"
       >
         <img
-          :src="product.images[fallbackViews[product.id] === 'side' ? 1 : 0] ?? product.images[0]"
+          :src="fallbackViews[product.id] === 'front' ? (product.images[0] ?? '/images/products/hoodie-front.png') : (product.images[1] ?? '/images/products/hoodie-side.png')"
           :alt="product.name"
           draggable="false"
         />

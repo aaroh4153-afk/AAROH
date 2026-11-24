@@ -446,10 +446,10 @@ export async function loadStore(): Promise<StorePayload> {
 
     return { products, orders, categories, collections, settings }
   } catch (error) {
-    console.warn('[aaroh/store] Database query failed.', error)
+    console.warn('[aaroh/store] Database query failed (using fallback seed data).', error)
     return {
-      products: [],
-      orders: [],
+      products: seedProducts,
+      orders: seedOrders,
       categories: seedCategories,
       collections: seedCollections,
       settings: defaultSettings,

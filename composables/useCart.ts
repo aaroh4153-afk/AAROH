@@ -41,14 +41,11 @@ function clearStorage() {
   } catch {}
 }
 
-// Shared state across all composable instances
-const items = useState<CartItem[]>('cart-items', () => [])
-const isOpen = useState<boolean>('cart-is-open', () => false)
-
-// Track whether we've already loaded from localStorage this session
-const hydrated = useState<boolean>('cart-hydrated', () => false)
-
 export const useCart = () => {
+  const items = useState<CartItem[]>('cart-items', () => [])
+  const isOpen = useState<boolean>('cart-is-open', () => false)
+  const hydrated = useState<boolean>('cart-hydrated', () => false)
+
   const count = computed(() => items.value.reduce((total, item) => total + item.quantity, 0))
 
   const subtotal = computed(() =>

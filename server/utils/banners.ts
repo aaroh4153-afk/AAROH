@@ -71,18 +71,23 @@ function parseBanners(input: unknown): Omit<StoreBanner, 'position'>[] {
 }
 
 export async function loadBanners(): Promise<StoreBanner[]> {
-  const { rows } = await query<BannerRow>(
-    `SELECT id, image, alt_text, position
-     FROM editorial_banners
-     ORDER BY position ASC, id ASC`,
-  )
+  try {
+    const { rows } = await query<BannerRow>(
+      `SELECT id, image, alt_text, position
+       FROM editorial_banners
+       ORDER BY position ASC, id ASC`,
+    )
 
-  return rows.map((row) => ({
-    id: row.id,
-    image: row.image,
-    altText: row.alt_text,
-    position: row.position,
-  }))
+    return rows.map((row) => ({
+      id: row.id,
+      image: row.image,
+      altText: row.alt_text,
+      position: row.position,
+    }))
+  } catch (error) {
+    console.warn('[aaroh/banners] Database query failed, using empty banners.', error)
+    return []
+  }
 }
 
 export async function replaceBanners(input: unknown): Promise<StoreBanner[]> {

@@ -26,22 +26,41 @@ export default defineEventHandler(async (event) => {
 
   const displayName = String(decoded.name || '').trim()
   const photoUrl = String(decoded.picture || '').trim()
-  const profileResult = await query<NeonAuthProfile>(
-    `INSERT INTO auth_users (
-       firebase_uid, email, display_name, photo_url, email_verified, created_at, updated_at
-     )
-     VALUES ($1, $2, $3, $4, true, now(), now())
-     ON CONFLICT (firebase_uid) DO UPDATE SET
-       email = EXCLUDED.email,
-       display_name = EXCLUDED.display_name,
-       photo_url = EXCLUDED.photo_url,
-       email_verified = true,
-       updated_at = now()
-     RETURNING firebase_uid, email, display_name, photo_url, email_verified, created_at, updated_at
-    `,
-    [decoded.uid, email, displayName, photoUrl],
-  )
-  const savedProfile = profileResult.rows[0]
+  
+  let savedProfile: NeonAuthProfile | undefined
+  try {
+    const profileResult = await query<NeonAuthProfile>(
+      `INSERT INTO auth_users (
+         firebase_uid, email, display_name, photo_url, email_verified, created_at, updated_at
+       )
+       VALUES ($1, $2, $3, $4, true, now(), now())
+       ON CONFLICT (firebase_uid) DO UPDATE SET
+         email = EXCLUDED.email,
+         display_name = EXCLUDED.display_name,
+         photo_url = EXCLUDED.photo_url,
+         email_verified = true,
+         updated_at = now()
+       RETURNING firebase_uid, email, display_name, photo_url, email_verified, created_at, updated_at
+      `,
+      [decoded.uid, email, displayName, photoUrl],
+    )
+    savedProfile = profileResult.rows[0]
+  } catch (dbError) {
+    console.warn('[aaroh/auth] Database write failed (likely quota limit). Falling back to session profile.', dbError)
+    // Graceful fallback: return the decoded Firebase auth profile so login does not break with a 500 error!
+    return {
+      user: {
+        uid: decoded.uid,
+        email,
+        displayName,
+        photoUrl,
+        emailVerified: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      welcomeEmailSent: false,
+    }
+  }
   if (!savedProfile) {
     throw createError({ statusCode: 500, statusMessage: 'The account profile could not be saved.' })
   }

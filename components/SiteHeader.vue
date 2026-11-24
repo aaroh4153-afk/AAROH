@@ -25,7 +25,6 @@ const { load, prefersReducedMotion } = useMotion()
 const navLinks = [
   { label: 'Home', href: '/' },
   { label: 'Shop all', href: '/shop' },
-  { label: 'Contact', href: '' },
   { label: 'Our story', href: '/story' },
 ]
 

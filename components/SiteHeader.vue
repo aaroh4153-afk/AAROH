@@ -25,6 +25,7 @@ const { load, prefersReducedMotion } = useMotion()
 const navLinks = [
   { label: 'Home', href: '/' },
   { label: 'Shop all', href: '/shop' },
+  { label: 'Contact', href: '' },
   { label: 'Our story', href: '/story' },
 ]
 
@@ -176,9 +177,11 @@ onBeforeUnmount(() => {
       <!-- Center: On desktop shows Nav Links, on mobile shows centered Wordmark -->
       <div class="nav-center nav-reveal">
         <nav class="desktop-nav-links" aria-label="Primary Navigation">
+        <!--
           <NuxtLink v-for="link in navLinks" :key="link.href" :to="link.href" class="desktop-nav-link">
             {{ link.label }}
           </NuxtLink>
+          -->
         </nav>
 
         <NuxtLink to="/" class="wordmark wordmark--mobile" aria-label="AAROH. home">

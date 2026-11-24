@@ -571,3 +571,6 @@ export function discountPercent(product: Product): number | null {
   if (!product.compareAtPrice || product.compareAtPrice <= product.price) return null
   return Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
 }
+
+/** Six considered blues reserved exclusively for the HeroSection 3D rail. */
+export const heroRailHoodies: Product[] = products.filter((product) => product.rail)

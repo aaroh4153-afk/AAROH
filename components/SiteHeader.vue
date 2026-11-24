@@ -1406,6 +1406,14 @@ onBeforeUnmount(() => {
     display: none;
   }
 
+  .account-btn {
+    width: 2.65rem;
+    height: 2.65rem;
+    justify-content: center;
+    padding: 0.25rem;
+    border-radius: 50%;
+  }
+
   .account-btn--signed-in {
     width: 2.4rem;
     min-width: 2.4rem;

@@ -1,28 +1,20 @@
 <script setup lang="ts">
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
-import { products as seedProducts } from '~/data/products'
+import { heroRailHoodies } from '~/data/products'
 import { getHeroRailImages } from '~/utils/productDisplayImages'
 
 const active = defineModel<number>('active', { default: 0 })
 
-const store = useStore()
-function resolveRailProducts() {
-  const activeRail = store.products.value.filter(
-    (product) => product.rail && product.status === 'active',
-  )
-  if (activeRail.length > 0) return activeRail
-  return seedProducts.filter((product) => product.rail && product.status === 'active')
-}
-
-const liveRail = resolveRailProducts()
-const products = liveRail.map((product) => ({
+// The HeroSection 3D rail is reserved exclusively for the 6 considered blue hoodies.
+const products = heroRailHoodies.map((product) => ({
   ...product,
   images: getHeroRailImages(product),
 }))
 
 const root = ref<HTMLDivElement | null>(null)
 const failed = ref(false)
+const fallbackViews = ref<Record<string, 'front' | 'side'>>({})
 
 const SPACING = 0.88
 const FOV = 28
@@ -143,10 +135,10 @@ function buildTees() {
 
   const loader = new THREE.TextureLoader()
   const geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_HEIGHT)
-  geometry.translate(0, -PLANE_HEIGHT / 2 + 0.036, 0)
+  geometry.translate(0, -PLANE_HEIGHT / 2 + 0.034, 0)
 
   const hitGeometry = new THREE.PlaneGeometry(PLANE_WIDTH * 0.88, PLANE_HEIGHT * 0.92)
-  hitGeometry.translate(0, -PLANE_HEIGHT / 2 + 0.036, 0)
+  hitGeometry.translate(0, -PLANE_HEIGHT / 2 + 0.034, 0)
   const hitMaterial = new THREE.MeshBasicMaterial({ visible: false })
 
   const safeActive = THREE.MathUtils.clamp(Math.round(active.value) || 0, 0, MAX_INDEX)
@@ -249,9 +241,9 @@ function tick() {
       if (products.length === 1) {
         targetBlend = hovered >= 0 ? 1 : 0
       } else if (i === currentTarget) {
-        targetZ = 0.52
+        targetZ = 0.05
         targetBlend = 1
-        targetScale = 1.05
+        targetScale = 1.04
       } else if (i < currentTarget) {
         const diff = currentTarget - i
         targetRotY = Math.min(1.05, 0.65 + diff * 0.08)
@@ -312,9 +304,9 @@ function tick() {
     camera.position.x += (followX - camera.position.x) * (isDragging ? 0.2 : 0.085)
     camera.lookAt(camera.position.x, -0.98, 0)
   } else {
-    const targetCamX = inside && !reduceMotion && !isDragging ? pointer.x * 0.35 : 0
+    const targetCamX = inside && !reduceMotion && !isDragging ? pointer.x * 0.15 : 0
     camera.position.x += (targetCamX - camera.position.x) * 0.05
-    camera.lookAt(0, -1.65, 0)
+    camera.lookAt(camera.position.x, -0.98, 0)
   }
 
   // Keep the framing pleasant when the stage is extremely short.
@@ -485,6 +477,13 @@ function onFallbackScroll(event: Event) {
   if (active.value !== closest) active.value = closest
 }
 
+function toggleFallbackView(productId: string) {
+  const product = products.find((entry) => entry.id === productId)
+  if (!product || product.images.length < 2) return
+
+  fallbackViews.value[productId] = fallbackViews.value[productId] === 'side' ? 'front' : 'side'
+}
+
 function onContextLost(event: Event) {
   event.preventDefault()
   contextLost = true
@@ -641,8 +640,13 @@ onBeforeUnmount(dispose)
         :key="product.id"
         class="rail-fallback__item"
         :class="{ 'rail-fallback__item--active': index === active }"
+        @click="toggleFallbackView(product.id)"
       >
-        <img :src="product.images[0]" alt="" draggable="false" />
+        <img
+          :src="product.images[fallbackViews[product.id] === 'side' ? 1 : 0] ?? product.images[0]"
+          alt=""
+          draggable="false"
+        />
       </figure>
     </div>
   </div>
@@ -718,6 +722,7 @@ onBeforeUnmount(dispose)
   transform: scale(0.94);
   transition: transform 0.3s ease, opacity 0.3s ease;
   scroll-snap-align: center;
+  cursor: pointer;
 }
 
 .rail-fallback__item img {
@@ -729,25 +734,13 @@ onBeforeUnmount(dispose)
 
 .rail-fallback__item--active {
   opacity: 1;
-  animation: rail-fallback-sway 4.8s ease-in-out infinite;
+  transform: scale(1.02);
   transform-origin: 50% 8%;
 }
 
-@keyframes rail-fallback-sway {
-  0%,
-  100% {
-    transform: scale(1.04) rotate(0deg);
-  }
-
-  50% {
-    transform: scale(1.04) rotate(1.4deg);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .rail-fallback__item,
-  .rail-fallback__item--active {
-    animation: none;
+  .rail-fallback__item {
+    transition: none;
   }
 }
 

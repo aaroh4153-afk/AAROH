@@ -69,8 +69,8 @@ export type ProductDraft = Omit<Product, 'id' | 'createdAt' | 'sku'> & {
  * local refs immediately and writes through to the Nitro API in the background.
  */
 export const useStore = () => {
-  const products = useState<Product[]>('studio-products', () => seedProducts.map(cloneProduct))
-  const orders = useState<Order[]>('studio-orders', () => seedOrders.map((o) => ({ ...o, items: [...o.items] })))
+  const products = useState<Product[]>('studio-products', () => [])
+  const orders = useState<Order[]>('studio-orders', () => [])
 
   const categoryList = useState<Category[]>('studio-categories', () => [...seedCategories])
   const collectionList = useState<Collection[]>('studio-collections', () => [...seedCollections])
@@ -81,7 +81,7 @@ export const useStore = () => {
   async function refreshFromDatabase() {
     try {
       const data = await $fetch<StorePayload>('/api/store')
-      if (data && Array.isArray(data.products) && data.products.length > 0) {
+      if (data && Array.isArray(data.products)) {
         products.value = data.products
       }
       if (data && Array.isArray(data.orders)) {
@@ -97,7 +97,7 @@ export const useStore = () => {
         settings.value = data.settings
       }
     } catch (error) {
-      console.warn('[aaroh/store] Could not refresh from the database; using seed catalogue.', error)
+      console.warn('[aaroh/store] Could not refresh from the database.', error)
     }
   }
 

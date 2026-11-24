@@ -20,6 +20,45 @@ const urlDraft = ref('')
 const canAdd = computed(() => props.modelValue.length < props.max)
 const maxFileSizeLabel = computed(() => `${Math.round(props.maxFileSize / (1024 * 1024))} MB`)
 
+function readAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(new Error('Could not read that file.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function prepareImage(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file)
+
+  try {
+    const largestDimension = Math.max(bitmap.width, bitmap.height)
+    if (file.size <= 250 * 1024 && largestDimension <= 1400) {
+      return await readAsDataUrl(file)
+    }
+
+    const scale = Math.min(1, 1400 / largestDimension)
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('Could not prepare that image.')
+
+    const supportsWebp = canvas.toDataURL('image/webp').startsWith('data:image/webp')
+    if (!supportsWebp) {
+      context.fillStyle = '#fff'
+      context.fillRect(0, 0, canvas.width, canvas.height)
+    }
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+
+    return canvas.toDataURL(supportsWebp ? 'image/webp' : 'image/jpeg', 0.82)
+  } finally {
+    bitmap.close()
+  }
+}
+
 function addImages(images: string[]) {
   const merged = [...props.modelValue, ...images].slice(0, props.max)
   emit('update:modelValue', merged)
@@ -45,14 +84,7 @@ function readFiles(files: FileList | null) {
       error.value = `Each image must be under ${maxFileSizeLabel.value}.`
       continue
     }
-    readers.push(
-      new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(String(reader.result))
-        reader.onerror = () => reject(new Error('Could not read that file.'))
-        reader.readAsDataURL(file)
-      }),
-    )
+    readers.push(prepareImage(file))
   }
 
   Promise.all(readers)
@@ -60,7 +92,7 @@ function readFiles(files: FileList | null) {
       if (images.length) addImages(images)
     })
     .catch(() => {
-      error.value = 'Could not read one of those files.'
+      error.value = error instanceof Error ? error.message : 'Could not prepare one of those images.'
     })
 }
 
@@ -169,7 +201,7 @@ function addUrl() {
     </div>
 
     <p class="studio-hint">
-      The first image is used as the catalogue cover. Files are read in the browser — nothing is uploaded.
+      The first image is used as the catalogue cover. 
     </p>
   </div>
 </template>

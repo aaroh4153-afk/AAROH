@@ -1,4 +1,5 @@
 import { createError } from 'h3'
+import { Jimp } from 'jimp'
 import type { PoolClient } from 'pg'
 import {
   categories as seedCategories,
@@ -98,6 +99,77 @@ interface OrderItemRow {
 
 interface SettingsRow {
   value: StoreSettings | string
+}
+
+interface ProductImageRow {
+  id: string
+  images: unknown
+}
+
+const PRODUCT_IMAGE_MAX_DIMENSION = 1400
+const PRODUCT_IMAGE_COMPRESSION_THRESHOLD = 350_000
+let productImageOptimization: Promise<void> | null = null
+
+async function optimizeProductImage(source: string): Promise<string> {
+  const match = /^data:image\/(jpeg|png);base64,([\s\S]+)$/i.exec(source)
+  if (!match) return source
+
+  const sourceBuffer = Buffer.from(match[2]!, 'base64')
+  if (sourceBuffer.length <= PRODUCT_IMAGE_COMPRESSION_THRESHOLD) return source
+
+  const image = await Jimp.read(sourceBuffer)
+  image.scaleToFit({ w: PRODUCT_IMAGE_MAX_DIMENSION, h: PRODUCT_IMAGE_MAX_DIMENSION })
+
+  const whiteBackground = new Jimp({
+    width: image.width,
+    height: image.height,
+    color: 0xffffffff,
+  })
+  whiteBackground.composite(image, 0, 0)
+
+  const optimizedBuffer = await whiteBackground.getBuffer('image/jpeg', { quality: 82 })
+  if (optimizedBuffer.length >= sourceBuffer.length) return source
+
+  return `data:image/jpeg;base64,${optimizedBuffer.toString('base64')}`
+}
+
+async function optimizeStoredProductImages(): Promise<void> {
+  if (!productImageOptimization) {
+    productImageOptimization = (async () => {
+      const { rows } = await query<ProductImageRow>('SELECT id, images FROM products')
+
+      for (const row of rows) {
+        const images = toStringArray(row.images)
+        const optimizedImages: string[] = []
+        let changed = false
+
+        for (const image of images) {
+          try {
+            const optimized = await optimizeProductImage(image)
+            optimizedImages.push(optimized)
+            changed ||= optimized !== image
+          } catch (error) {
+            console.warn(`[aaroh/store] Could not optimize an image for product ${row.id}.`, error)
+            optimizedImages.push(image)
+          }
+        }
+
+        if (changed) {
+          await query(
+            'UPDATE products SET images = $2::jsonb WHERE id = $1',
+            [row.id, JSON.stringify(optimizedImages)],
+          )
+        }
+      }
+    })()
+  }
+
+  try {
+    await productImageOptimization
+  } catch (error) {
+    productImageOptimization = null
+    throw error
+  }
 }
 
 function toIso(value: Date | string): string {
@@ -265,6 +337,8 @@ export async function loadCollections(): Promise<Collection[]> {
 }
 
 export async function loadProducts(): Promise<Product[]> {
+  await optimizeStoredProductImages()
+
   const [productResult, sizeResult] = await Promise.all([
     query<ProductRow>('SELECT * FROM products ORDER BY position ASC, created_at DESC, id ASC'),
     query<SizeRow>('SELECT product_id, size, stock FROM product_sizes ORDER BY position ASC, size ASC'),
@@ -353,8 +427,8 @@ export async function saveSettings(input: unknown): Promise<StoreSettings> {
 export async function loadStore(): Promise<StorePayload> {
   if (!hasDatabase()) {
     return {
-      products: seedProducts,
-      orders: seedOrders,
+      products: [],
+      orders: [],
       categories: seedCategories,
       collections: seedCollections,
       settings: defaultSettings,
@@ -372,10 +446,10 @@ export async function loadStore(): Promise<StorePayload> {
 
     return { products, orders, categories, collections, settings }
   } catch (error) {
-    console.warn('[aaroh/store] Database unavailable; serving seed catalogue.', error)
+    console.warn('[aaroh/store] Database query failed.', error)
     return {
-      products: seedProducts,
-      orders: seedOrders,
+      products: [],
+      orders: [],
       categories: seedCategories,
       collections: seedCollections,
       settings: defaultSettings,

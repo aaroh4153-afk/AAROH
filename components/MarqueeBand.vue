@@ -7,15 +7,16 @@ withDefaults(
   {
     items: () => [
       'ARCHITECTURAL SILHOUETTE',
-      '480 GSM HEAVYWEIGHT FLEECE',
+      'AAROH Fashion House',
       'ZERO COMPROMISE',
-      'SMALL-BATCH PRODUCTION',
-      'CUSTOM HARDWARE',
+      'Styled Hoodies & Sweatshirts',
       'CRAFTED IN INDIA',
       'MADE TO BE WORN',
     ],
     duration: 32,
   },
+
+  // stop when Hovered
 )
 </script>
 
@@ -36,10 +37,10 @@ withDefaults(
 .marquee {
   position: relative;
   overflow: hidden;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  background: #ffffff;
-  color: #111111;
+  border-top: 2px solid rgba(0, 0, 0, 0.939);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.738);
+  background: #000000;
+  color: #f6f9ff;
   padding: clamp(10px, 1.2vw, 15px) 0;
 }
 
@@ -68,7 +69,7 @@ withDefaults(
   letter-spacing: 0.15em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: #111111;
+  color: #ffffff;
 }
 
 .marquee__star {

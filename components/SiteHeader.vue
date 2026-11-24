@@ -256,133 +256,59 @@ onBeforeUnmount(() => {
           role="dialog"
           aria-modal="true"
           aria-label="Search the collection"
+          @click.self="closeSearch"
         >
-          <div class="search-overlay__top">
-            <span class="search-overlay__wordmark">AAROH.</span>
-            <span class="search-overlay__eyebrow">Search the collection</span>
-            <button class="search-close" type="button" aria-label="Close search" @click="closeSearch">
-              Close
-              <kbd>Esc</kbd>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="m6 6 12 12M18 6 6 18" />
-              </svg>
-            </button>
-          </div>
-
-          <div class="search-overlay__inner">
-            <form class="search-pill" role="search" @submit.prevent="submitSearch">
-              <svg class="search-pill__icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <circle cx="11" cy="11" r="7.5" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-
-              <input
-                ref="searchInput"
-                v-model="query"
-                type="search"
-                placeholder="Search products, colours or pieces…"
-                aria-label="Search the collection"
-                autocomplete="off"
-              />
-
-              <span class="search-pill__count">{{ filteredProducts.length }} {{ filteredProducts.length === 1 ? 'item' : 'items' }}</span>
-
-              <button class="search-pill__submit" type="submit" aria-label="View results">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14" />
-                  <path d="m12 5 7 7-7 7" />
+          <div class="search-modal-card">
+            <!-- Search Input Header -->
+            <div class="search-modal-header">
+              <div class="search-modal-input-wrap">
+                <svg class="search-modal-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.8-3.8" />
                 </svg>
-              </button>
-            </form>
+                <input
+                  ref="searchInput"
+                  v-model="query"
+                  type="search"
+                  placeholder="Search"
+                  aria-label="Search products"
+                  autocomplete="off"
+                  class="search-modal-input"
+                />
+              </div>
 
-            <div class="search-tags">
-              <span>Try</span>
-              <button
-                v-for="tag in searchTags"
-                :key="tag"
-                type="button"
-                :class="{ 'search-tags__active': query.toLowerCase() === tag.toLowerCase() }"
-                @click="applyTag(tag)"
-              >
-                {{ tag }}
+              <button class="search-modal-close" type="button" aria-label="Close search" @click="closeSearch">
+                ✕
               </button>
             </div>
 
-            <div class="search-panel">
-              <Transition name="search-swap" mode="out-in">
-                <div v-if="isFiltering" key="results" class="search-panel__body">
-                  <div class="search-panel__head">
-                    <span class="search-panel__title">Products</span>
-                    <span class="search-panel__meta">
-                      {{ filteredProducts.length }} {{ filteredProducts.length === 1 ? 'result' : 'results' }} for
-                      “{{ query }}”
-                    </span>
+            <!-- Search Results Content -->
+            <div class="search-modal-body">
+              <h3 class="search-modal-label">Products</h3>
+
+              <div class="search-cards-grid">
+                <NuxtLink
+                  v-for="product in (filteredProducts.length ? filteredProducts.slice(0, 8) : featuredProducts.slice(0, 4))"
+                  :key="product.id"
+                  :to="`/product/${product.id}`"
+                  class="search-card"
+                  @click="closeSearch"
+                >
+                  <div class="search-card__thumb">
+                    <img :src="product.images[0]" :alt="product.name" />
                   </div>
-
-                  <NuxtLink
-                    v-for="product in filteredProducts"
-                    :key="product.id"
-                    :to="`/product/${product.id}`"
-                    class="search-row"
-                    @click="closeSearch"
-                  >
-                    <span class="search-row__thumb" :style="{ '--tint': product.hex }">
-                      <img :src="product.images[0]" :alt="product.name" />
-                    </span>
-                    <span class="search-row__info">
-                      <strong>{{ product.name }}</strong>
-                      <span>{{ product.colour }}</span>
-                    </span>
-                    <span class="search-chip">{{ stockLabel(product) }}</span>
-                    <span class="search-row__price">{{ formatPrice(product.price) }}</span>
-                    <span class="search-row__go" aria-hidden="true">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                        <path d="M5 12h14" />
-                        <path d="m12 5 7 7-7 7" />
-                      </svg>
-                    </span>
-                  </NuxtLink>
-
-                  <div v-if="!filteredProducts.length" class="search-panel__empty">
-                    <p>No products match that search.</p>
-                    <button type="button" @click="query = ''">Clear the search</button>
+                  <h4 class="search-card__title">{{ product.name }}</h4>
+                  <div class="search-card__prices">
+                    <span class="search-card__orig">{{ formatPrice(Math.round(product.price * 1.35)) }}</span>
+                    <span class="search-card__price">{{ formatPrice(product.price) }}</span>
                   </div>
-                </div>
+                </NuxtLink>
+              </div>
 
-                <div v-else key="popular" class="search-panel__body">
-                  <div class="search-panel__head">
-                    <span class="search-panel__title">Popular right now</span>
-                    <span class="search-panel__meta">The core collection</span>
-                  </div>
-
-                  <NuxtLink
-                    v-for="product in featuredProducts.slice(0, 3)"
-                    :key="product.id"
-                    :to="`/product/${product.id}`"
-                    class="search-row"
-                    @click="closeSearch"
-                  >
-                    <span class="search-row__thumb" :style="{ '--tint': product.hex }">
-                      <img :src="product.images[0]" :alt="product.name" />
-                    </span>
-                    <span class="search-row__info">
-                      <strong>{{ product.name }}</strong>
-                      <span>{{ product.colour }}</span>
-                    </span>
-                    <span class="search-chip">{{ stockLabel(product) }}</span>
-                    <span class="search-row__price">{{ formatPrice(product.price) }}</span>
-                    <span class="search-row__go" aria-hidden="true">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                        <path d="M5 12h14" />
-                        <path d="m12 5 7 7-7 7" />
-                      </svg>
-                    </span>
-                  </NuxtLink>
-                </div>
-              </Transition>
+              <div v-if="isFiltering && !filteredProducts.length" class="search-modal-empty">
+                <p>No products found for “{{ query }}”.</p>
+              </div>
             </div>
-
-            <p class="search-hint">Press Enter to view all results · Esc to close</p>
           </div>
         </div>
       </Transition>
@@ -764,345 +690,193 @@ onBeforeUnmount(() => {
   will-change: transform;
 }
 
-/* Full-screen editorial search overlay. */
+/* Clean Floating Modal Search */
 .search-overlay {
   position: fixed;
   inset: 0;
-  z-index: 300;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 40px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.search-modal-card {
+  width: min(100%, 860px);
+  max-height: 85vh;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  background: var(--bg-subtle);
-  color: var(--ink);
+  overflow: hidden;
+  animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.search-overlay__top {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+@keyframes modalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.search-modal-header {
+  display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 18px var(--gutter);
-  border-bottom: 1.5px solid var(--ink);
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  gap: 16px;
 }
 
-.search-overlay__wordmark {
-  color: var(--blue);
-  font-family: var(--font-logo);
-  font-size: clamp(1.4rem, 2.2vw, 1.9rem);
-  font-stretch: 125%;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  line-height: 1;
-}
-
-.search-overlay__eyebrow {
-  justify-self: center;
-  color: var(--text-secondary);
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.search-close {
-  display: inline-flex;
-  align-items: center;
-  justify-self: end;
-  gap: 8px;
-  padding: 9px 13px;
-  border: 1.5px solid var(--ink);
-  border-radius: var(--pill);
-  background: transparent;
-  color: var(--ink);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.search-close kbd {
-  padding: 2px 5px;
-  border: 1px solid currentColor;
-  border-radius: 3px;
-  font-family: inherit;
-  font-size: 0.55rem;
-  opacity: 0.7;
-}
-
-.search-overlay__inner {
-  width: 100%;
-  max-width: 780px;
-  margin-inline: auto;
-  padding: clamp(30px, 5vw, 66px) var(--gutter) clamp(46px, 7vw, 90px);
-}
-
-.search-pill {
+.search-modal-input-wrap {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 58px;
-  padding: 0 7px 0 20px;
-  border: 1px solid rgba(11, 18, 32, 0.14);
-  border-radius: var(--pill);
-  background: var(--surface);
-  box-shadow: 0 18px 40px -34px rgba(11, 18, 32, 0.45);
-  color: var(--ink);
-  transition: border-color 0.2s ease;
 }
 
-.search-pill:focus-within {
-  border-color: rgba(11, 18, 32, 0.3);
+.search-modal-icon {
+  color: #666666;
+  flex-shrink: 0;
 }
 
-.search-pill__icon {
-  flex: none;
-  color: var(--text-secondary);
-}
-
-.search-pill input {
+.search-modal-input {
   flex: 1;
-  min-width: 0;
   border: none;
   background: transparent;
-  color: var(--ink);
-  font-size: clamp(0.92rem, 1.3vw, 1.05rem);
-  font-weight: 550;
-  letter-spacing: -0.01em;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 1.05rem;
+  color: #111111;
   outline: none;
-  box-shadow: none;
   appearance: none;
 }
 
-.search-pill input::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.58;
+.search-modal-input::placeholder {
+  color: #888888;
 }
 
-.search-pill input::-webkit-search-cancel-button,
-.search-pill input::-webkit-search-decoration {
-  display: none;
+.search-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  color: #111111;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: opacity 0.15s;
 }
 
-.search-pill__count {
-  color: var(--text-secondary);
-  font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
+.search-modal-close:hover {
+  opacity: 0.6;
 }
 
-.search-pill__submit {
-  display: inline-flex;
-  flex: none;
+.search-modal-body {
+  padding: 24px 28px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.search-modal-label {
+  margin: 0;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #222222;
+  letter-spacing: 0.04em;
+}
+
+.search-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.search-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-decoration: none;
+  color: #111111;
+  transition: transform 0.2s ease;
+}
+
+.search-card:hover {
+  transform: translateY(-2px);
+}
+
+.search-card__thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f4f4f4;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: var(--blue);
-  color: #fff;
-  cursor: pointer;
 }
 
-.search-tags {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-top: 16px;
+.search-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.search-tags > span {
-  margin-right: 4px;
-  color: var(--text-secondary);
-  font-size: 0.6rem;
+.search-card__title {
+  margin: 0;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.search-tags button {
-  padding: 6px 11px;
-  border: 1px solid rgba(11, 18, 32, 0.12);
-  border-radius: var(--pill);
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-size: 0.68rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
-
-.search-tags button:hover,
-.search-tags__active {
-  border-color: var(--blue) !important;
-  background: var(--sky) !important;
-  color: var(--blue) !important;
-}
-
-.search-hint {
-  margin-top: 14px;
-  color: var(--text-muted);
-  font-size: 0.62rem;
-  font-weight: 500;
   letter-spacing: 0.04em;
-  text-align: center;
-}
-
-.search-panel {
-  margin-top: 14px;
-  padding: 8px;
-  border-radius: 18px;
-  background: var(--surface);
-  box-shadow: 0 30px 70px -48px rgba(11, 18, 32, 0.55);
-}
-
-.search-panel__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 8px 12px 10px;
-}
-
-.search-panel__title {
-  color: var(--ink);
-  font-size: 0.66rem;
-  font-weight: 750;
-  letter-spacing: 0.12em;
   text-transform: uppercase;
+  line-height: 1.35;
+  color: #111111;
 }
 
-.search-panel__meta {
-  overflow: hidden;
-  color: var(--text-secondary);
-  font-size: 0.64rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.search-row {
-  display: grid;
-  grid-template-columns: 54px minmax(0, 1fr) auto auto 36px;
-  align-items: center;
-  gap: 14px;
-  padding: 9px 12px;
-  border-radius: 12px;
-  color: var(--ink);
-  text-decoration: none;
-  transition: background-color 0.2s ease;
-}
-
-.search-row:hover {
-  background: var(--bg-subtle);
-}
-
-.search-row__thumb {
-  display: grid;
-  width: 54px;
-  height: 62px;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 9px;
-  background:
-    radial-gradient(100% 74% at 50% 22%, #fff, transparent 72%),
-    color-mix(in srgb, var(--tint) 26%, var(--bg-subtle));
-}
-
-.search-row__thumb img {
-  width: 82%;
-  height: 88%;
-  object-fit: contain;
-  transition: transform 0.4s var(--ease);
-}
-
-.search-row:hover .search-row__thumb img {
-  transform: scale(1.05);
-}
-
-.search-row__info {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-
-.search-row__info strong {
-  overflow: hidden;
-  font-size: 0.88rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.search-row__info span {
-  overflow: hidden;
-  color: var(--text-secondary);
-  font-size: 0.72rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.search-chip {
-  padding: 5px 9px;
-  border-radius: var(--pill);
-  background: rgba(30, 64, 255, 0.08);
-  color: var(--blue);
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-.search-row__price {
-  color: var(--ink);
-  font-size: 0.8rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.search-row__go {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border: 1px solid rgba(11, 18, 32, 0.14);
-  border-radius: 50%;
-  color: var(--ink);
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.25s var(--ease);
-}
-
-.search-row:hover .search-row__go {
-  border-color: var(--blue);
-  background: var(--blue);
-  color: #fff;
-  transform: translateX(2px);
-}
-
-.search-panel__empty {
+.search-card__prices {
   display: flex;
-  align-items: baseline;
-  gap: 14px;
-  padding: 22px 12px;
-  color: var(--text-secondary);
-  font-size: 0.86rem;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.74rem;
 }
 
-.search-panel__empty button {
-  padding: 0 0 2px;
-  border: none;
-  border-bottom: 1px solid currentColor;
-  background: none;
-  color: var(--blue);
-  font-size: 0.78rem;
+.search-card__orig {
+  color: #888888;
+  text-decoration: line-through;
+}
+
+.search-card__price {
   font-weight: 700;
-  cursor: pointer;
+  color: #111111;
+}
+
+.search-modal-empty {
+  padding: 30px;
+  text-align: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.82rem;
+  color: #666666;
+}
+
+@media (max-width: 768px) {
+  .search-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .search-modal-body {
+    padding: 16px 18px;
+  }
 }
 
 .search-fade-enter-active,

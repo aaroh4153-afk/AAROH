@@ -56,29 +56,26 @@ onBeforeUnmount(() => {
     <div class="campaign__panel">
       <div class="campaign__copy">
         <div class="campaign__kicker">
-          <span class="campaign__label"><i aria-hidden="true" />03 — The campaign</span>
-          <span class="campaign__season">Autumn / Winter ’26</span>
+          <span class="campaign__label"><i aria-hidden="true" />03 — THE CAMPAIGN</span>
+          <span class="campaign__season">AUTUMN / WINTER ’26</span>
         </div>
 
         <h2 id="campaign-title" class="campaign__title">
-          AAROH. is everyday uniform. Built for the ones who move different. Light layers, quiet colour,
-          and a cut that carries its own confidence.
+          ARCHITECTURAL CUTS. WEIGHT WITHOUT COMPROMISE. SILHOUETTES CRAFTED FOR DAILY REPETITION.
         </h2>
 
         <div class="campaign__foot">
           <p class="campaign__note">
-            Considered silhouettes, softened colour and layers that carry their own weight. AAROH. is
-            made for the in-between — the commute, the off-duty hours, the everyday that asks for more.
-            Not loud. Just certain.
+            Engineered with structured drop shoulders, custom-dyed royal blue 480 GSM fleece, and obsessive stitch density. Every piece is cut in small studio batches to age gracefully and become your primary wardrobe foundation.
           </p>
 
-          <a class="campaign__link" :href="INSTAGRAM_URL" target="_blank" rel="noopener">
-            Explore the look
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-              <path d="M7 17 17 7" />
-              <path d="M7 7h10v10" />
+          <NuxtLink class="campaign__link" to="/shop">
+            EXPLORE THE COLLECTION
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
             </svg>
-          </a>
+          </NuxtLink>
         </div>
       </div>
 
@@ -100,26 +97,27 @@ onBeforeUnmount(() => {
 .campaign {
   width: 100%;
   padding: 0;
+  background: #ffffff;
 }
 
 .campaign__panel {
   display: grid;
-  grid-template-columns: minmax(0, 1.58fr) minmax(0, 1fr);
-  min-height: clamp(500px, 44vw, 660px);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  min-height: clamp(480px, 42vw, 640px);
   overflow: hidden;
   border-block: 1px solid rgba(0, 0, 0, 0.08);
-
-  background: var(--white);
-  
+  background: #ffffff;
 }
 
 .campaign__copy {
   display: flex;
   flex-direction: column;
-  padding-top: clamp(28px, 3.8vw, 56px);
+  justify-content: space-between;
+  padding-top: clamp(32px, 4vw, 64px);
   padding-right: clamp(24px, 4.4vw, 64px);
-  padding-bottom: clamp(24px, 3.4vw, 48px);
+  padding-bottom: clamp(28px, 3.6vw, 56px);
   padding-left: max(var(--gutter), calc((100vw - var(--max)) / 2 + var(--gutter)));
+  background: #ffffff;
 }
 
 .campaign__kicker {
@@ -127,10 +125,11 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  color: rgba(11, 18, 32, 0.54);
-  font-size: 0.62rem;
-  font-weight: 650;
-  letter-spacing: 0.14em;
+  color: #666666;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -145,159 +144,84 @@ onBeforeUnmount(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--blue);
+  background: #0012db;
 }
 
 .campaign__title {
-  max-width: 31ch;
-  margin-top: clamp(34px, 4.6vw, 64px);
-  color: var(--ink);
-  font-size: clamp(1.5rem, 2.62vw, 2.85rem);
-  font-stretch: 80%;
-  font-weight: 720;
-  letter-spacing: -0.012em;
-  line-height: 0.99;
+  max-width: 32ch;
+  margin-top: clamp(28px, 4vw, 54px);
+  margin-bottom: clamp(20px, 3vw, 40px);
+  color: #111111;
+  font-family: var(--font-logo), 'Space Grotesk', -apple-system, sans-serif;
+  font-size: clamp(1.6rem, 2.8vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
   text-transform: uppercase;
 }
 
 .campaign__foot {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 30px;
-  margin-top: auto;
-  padding-top: clamp(40px, 6vw, 92px);
+  display: grid;
+  gap: 24px;
 }
 
 .campaign__note {
-  max-width: 47ch;
-  color: var(--rust);
-  font-size: clamp(0.72rem, 0.82vw, 0.82rem);
-  font-weight: 500;
-  letter-spacing: 0.005em;
-  line-height: 1.6;
+  max-width: 48ch;
+  margin: 0;
+  color: #444444;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: clamp(0.78rem, 0.95vw, 0.88rem);
+  line-height: 1.68;
 }
 
 .campaign__link {
   display: inline-flex;
-  flex: none;
   align-items: center;
-  gap: 7px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid currentColor;
-  color: var(--ink);
-  font-size: 0.72rem;
+  gap: 10px;
+  color: #111111;
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-decoration: none;
   text-transform: uppercase;
-  white-space: nowrap;
-  transition: color 0.22s ease;
+  transition: color 0.15s ease, transform 0.15s ease;
 }
 
 .campaign__link:hover {
-  color: var(--blue);
-}
-
-.campaign__link svg {
-  transition: transform 0.3s var(--ease);
-}
-
-.campaign__link:hover svg {
-  transform: translate(2px, -2px);
+  color: #0012db;
+  transform: translateX(3px);
 }
 
 .campaign__media {
   position: relative;
-  min-height: 100%;
+  margin: 0;
   overflow: hidden;
-  background: #ecebe6;
+  background: #ffffff;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .campaign__media img {
-  position: absolute;
-  inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 42%;
-  user-select: none;
+  object-position: center top;
 }
 
-@media (max-width: 1024px) {
-  .campaign__panel {
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-  }
-
-  .campaign__title {
-    font-size: clamp(1.4rem, 3.4vw, 2.2rem);
-  }
-
-  .campaign__foot {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 20px;
-    padding-top: clamp(34px, 5vw, 60px);
-  }
-}
-
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .campaign__panel {
     grid-template-columns: 1fr;
-    min-height: 0;
   }
 
   .campaign__copy {
-    padding: 24px var(--gutter) 28px;
-  }
-
-  .campaign__title {
-    margin-top: 30px;
-    font-size: clamp(1.5rem, 6.5vw, 2.15rem);
-  }
-
-  .campaign__season {
-    display: none;
-  }
-
-  .campaign__foot {
-    gap: 18px;
-    padding-top: 32px;
+    padding-inline: var(--gutter);
   }
 
   .campaign__media {
-    order: -1;
-    aspect-ratio: 4 / 4.4;
-    min-height: 0;
-  }
-
-  .campaign__media img {
-    inset: 0;
-    height: 100%;
-    object-position: 50% 36%;
-  }
-}
-
-@media (max-width: 420px) {
-  .campaign__note {
-    font-size: 0.7rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .campaign__link,
-  .campaign__link svg {
-    transition: none;
-  }
-}
-
-@media (hover: none) {
-  .campaign__link:active {
-    color: var(--blue);
-  }
-
-  .campaign__link:active svg {
-    transform: translate(2px, -2px);
+    aspect-ratio: 4 / 3;
+    border-left: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
   }
 }
 </style>

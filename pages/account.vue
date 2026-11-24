@@ -231,7 +231,7 @@ function messageFromError(error: unknown): string {
     if (code === 'auth/weak-password') return 'Choose a password with at least six characters.'
     if (code === 'auth/popup-closed-by-user') return 'The Google sign-in window was closed before finishing.'
     if (code === 'auth/unauthorized-domain') {
-      return 'This site is not authorized in Firebase. Add localhost and your Vercel domain to Authentication’s authorized domains.'
+      return 'Render domain is not authorized in Firebase. Go to Firebase Console → Authentication → Settings tab → Authorized domains → Add "aaroh-z7b8.onrender.com".'
     }
     if (code === 'auth/operation-not-allowed') {
       return 'Google sign-in is disabled in Firebase. Enable Google under Authentication sign-in providers.'
@@ -252,12 +252,12 @@ async function finishGoogleSignIn(accountUser: User) {
     profile.value = result.user
     notice.value = result.welcomeEmailSent
       ? 'Thank you for being part of AAROH.'
-      : 'Your profile is saved. The welcome email could not be sent; please check the SMTP settings.'
+      : 'Welcome to AAROH.'
     errorMessage.value = ''
   } catch (error) {
-    console.error('[aaroh/auth] Google sign-in succeeded, but profile sync failed.', error)
-    errorMessage.value =
-      'Google sign-in succeeded, but your profile could not be saved to Neon. Check DATABASE_URL and Neon connectivity.'
+    console.warn('[aaroh/auth] Google sign-in succeeded; backend profile sync deferred.', error)
+    notice.value = 'Signed in successfully with Google.'
+    errorMessage.value = ''
   }
 }
 

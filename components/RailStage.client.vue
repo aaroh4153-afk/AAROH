@@ -498,9 +498,20 @@ function init() {
   }
 
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: 'default',
+      failIfMajorPerformanceCaveat: false,
+    })
   } catch (error) {
     console.warn('[RailStage] WebGL unavailable; using static fallback.', error)
+    failed.value = true
+    return
+  }
+
+  if (!renderer.getContext()) {
+    console.warn('[RailStage] WebGL context is null; using static fallback.')
     failed.value = true
     return
   }
@@ -633,17 +644,24 @@ onBeforeUnmount(dispose)
     @lostpointercapture="onPointerCancel"
     @contextmenu.prevent
   >
+    <!-- Fixed Rod Element for Fallback: stays firmly anchored across the stage, never wobbling or scrolling -->
+    <div v-if="failed" class="rail-fixed-rod" aria-hidden="true">
+      <div class="rail-rod-finial rail-rod-finial--left" />
+      <div class="rail-rod-shaft" />
+      <div class="rail-rod-finial rail-rod-finial--right" />
+    </div>
+
     <div v-if="failed" class="rail-fallback" @scroll.passive="onFallbackScroll">
       <figure
         v-for="(product, index) in products"
         :key="product.id"
         class="rail-fallback__item"
         :class="{ 'rail-fallback__item--active': index === active }"
-        @click="toggleFallbackView(product.id)"
+        @click="active = index; toggleFallbackView(product.id)"
       >
         <img
           :src="product.images[fallbackViews[product.id] === 'side' ? 1 : 0] ?? product.images[0]"
-          alt=""
+          :alt="product.name"
           draggable="false"
         />
       </figure>
@@ -671,22 +689,64 @@ onBeforeUnmount(dispose)
 .rail-stage--fallback {
   cursor: default;
   touch-action: pan-x pan-y;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .rail-stage--fallback :deep(canvas) {
   display: none;
 }
 
+/* Dedicated Fixed Rail Rod for Fallback */
+.rail-fixed-rod {
+  position: absolute;
+  top: clamp(28px, 6vw, 44px);
+  left: 2%;
+  right: 2%;
+  height: 9px;
+  display: flex;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.rail-rod-shaft {
+  flex: 1;
+  height: 9px;
+  background: linear-gradient(180deg, #784822 0%, #46250f 55%, #2a1608 100%);
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.rail-rod-finial {
+  width: 14px;
+  height: 20px;
+  background: linear-gradient(180deg, #d4a76a 0%, #8b622b 50%, #583c16 100%);
+  border-radius: 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.rail-rod-finial--left {
+  margin-right: -2px;
+}
+
+.rail-rod-finial--right {
+  margin-left: -2px;
+}
+
+/* Fallback items container */
 .rail-fallback {
   position: relative;
   display: flex;
   width: 100%;
   height: 100%;
   align-items: flex-start;
+  justify-content: center;
+  gap: clamp(12px, 2.2vw, 36px);
+  padding-top: clamp(26px, 5.8vw, 42px);
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  padding: 4% 33% 0;
-  scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
 
@@ -694,33 +754,19 @@ onBeforeUnmount(dispose)
   display: none;
 }
 
-.rail-fallback::before {
-  position: absolute;
-  top: 8%;
-  right: 8%;
-  left: 8%;
-  z-index: 0;
-  height: 0.32rem;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #9a6a3e, #4e2d14 58%, #2f1c0d);
-  box-shadow: 0 0.15rem 0.25rem rgb(0 0 0 / 18%);
-  content: '';
-}
-
 .rail-fallback__item {
   display: flex;
   position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  flex: 0 0 100%;
+  z-index: 2;
+  width: clamp(130px, 14vw, 210px);
+  height: clamp(260px, 28vw, 390px);
+  flex: 0 0 clamp(130px, 14vw, 210px);
   align-items: flex-start;
   justify-content: center;
   margin: 0;
-  opacity: 0.78;
-  transform: scale(0.94);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  scroll-snap-align: center;
+  opacity: 0.88;
+  transform: scale(0.96);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.28s ease;
   cursor: pointer;
 }
 
@@ -731,10 +777,11 @@ onBeforeUnmount(dispose)
   object-position: center top;
 }
 
+.rail-fallback__item:hover,
 .rail-fallback__item--active {
   opacity: 1;
-  transform: scale(1.02);
-  transform-origin: 50% 8%;
+  transform: scale(1.05);
+  z-index: 5;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -745,13 +792,16 @@ onBeforeUnmount(dispose)
 
 @media (max-width: 819px) {
   .rail-stage--fallback .rail-fallback {
-    padding-inline: 12%;
+    justify-content: flex-start;
+    padding-inline: 18%;
+    scroll-snap-type: x mandatory;
   }
 
   .rail-stage--fallback .rail-fallback__item {
-    width: 100%;
-    height: 90%;
-    flex: 0 0 100%;
+    flex: 0 0 64%;
+    width: 64%;
+    height: clamp(260px, 60vw, 360px);
+    scroll-snap-align: center;
   }
 }
 </style>

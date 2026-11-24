@@ -63,33 +63,8 @@ onBeforeUnmount(() => cleanupMotion?.())
     <div class="story-container">
       <!-- Top Row: Editorial Media + Brand Copy -->
       <div class="story-hero-grid">
-        <!-- Left Media Box with background image -->
-        <div class="story-media-card story-reveal" :style="{ backgroundImage: `url(${mainImage})` }">
-          <!-- Floating top pill bar -->
-          <div class="story-media-pill" aria-hidden="true">
-            <span class="story-pill-icon">☰</span>
-            <span class="story-pill-logo">✦</span>
-            <span class="story-pill-icon">🔍</span>
-            <span class="story-pill-icon">👤</span>
-            <span class="story-pill-icon">🔖</span>
-            <span class="story-pill-icon">🛍️</span>
-          </div>
-
-          <!-- Center play action -->
-          <div class="story-media-play" aria-hidden="true">
-            <div class="story-play-disc">
-              <svg class="story-play-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </div>
-          </div>
-
-          <!-- Bottom bar tags -->
-          <div class="story-media-foot">
-            <span class="story-media-promo">up to 30% off!</span>
-            <span class="story-media-count">02 / 03</span>
-          </div>
-        </div>
+        <!-- Left Media Box: clean 1px border, no shadow, no overlay cards -->
+        <div class="story-media-card story-reveal" :style="{ backgroundImage: `url(${mainImage})` }" />
 
         <!-- Right Editorial Column -->
         <div class="story-copy-col story-reveal">
@@ -179,107 +154,10 @@ onBeforeUnmount(() => cleanupMotion?.())
   min-height: clamp(320px, 38vw, 540px);
   background-size: cover;
   background-position: center top;
-  border-radius: 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: none;
   overflow: hidden;
-  box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.18);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 18px 22px;
-}
-
-.story-media-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.3) 0%,
-    rgba(0, 0, 0, 0.05) 30%,
-    rgba(0, 0, 0, 0.45) 100%
-  );
-  pointer-events: none;
-}
-
-/* Floating top pill */
-.story-media-pill {
-  position: relative;
-  z-index: 2;
-  align-self: center;
-  display: inline-flex;
-  align-items: center;
-  gap: 16px;
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 8px 18px;
-  border-radius: 9999px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-  font-size: 0.82rem;
-  color: #111111;
-  user-select: none;
-}
-
-.story-pill-logo {
-  font-size: 0.95rem;
-  color: #000;
-  font-weight: 700;
-}
-
-/* Center play */
-.story-media-play {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.story-play-disc {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: #ffffff;
-  color: #000000;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
-  cursor: pointer;
-  transition: transform 0.25s ease, background 0.2s ease;
-}
-
-.story-play-disc:hover {
-  transform: scale(1.08);
-}
-
-.story-play-icon {
-  margin-left: 3px;
-}
-
-/* Bottom tags in media */
-.story-media-foot {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  color: #ffffff;
-}
-
-.story-media-promo {
-  font-family: var(--font-logo), 'Space Grotesk', sans-serif;
-  font-size: clamp(1.2rem, 2vw, 1.85rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-  opacity: 0.92;
-}
-
-.story-media-count {
-  font-family: var(--font-mono), 'Space Mono', monospace;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  opacity: 0.85;
 }
 
 /* Right Column (Editorial) */

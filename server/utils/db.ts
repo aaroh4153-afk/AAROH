@@ -171,9 +171,11 @@ async function createSchema(client: PoolClient): Promise<void> {
       quantity integer NOT NULL DEFAULT 1 CHECK (quantity > 0),
       image text NOT NULL DEFAULT '',
       created_at timestamptz NOT NULL DEFAULT now(),
-      updated_at timestamptz NOT NULL DEFAULT now(),
-      UNIQUE (firebase_uid, product_id, COALESCE(size, ''))
+      updated_at timestamptz NOT NULL DEFAULT now()
     );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS user_carts_unique_idx
+      ON user_carts (firebase_uid, product_id, COALESCE(size, ''));
 
     CREATE INDEX IF NOT EXISTS user_carts_uid_idx ON user_carts(firebase_uid);
 

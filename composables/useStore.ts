@@ -373,6 +373,19 @@ export const useStore = () => {
     return orders.value.find((order) => order.id === id)
   }
 
+  /**
+   * Places a storefront order. The API is authoritative, so wait for the saved
+   * order before showing the confirmation and adding it to the account list.
+   */
+  async function placeOrder(draft: Order): Promise<Order> {
+    const saved = await $fetch<Order>('/api/orders', {
+      method: 'POST',
+      body: draft,
+    })
+    orders.value = [saved, ...orders.value.filter((order) => order.id !== saved.id)]
+    return saved
+  }
+
   function setPaymentStatus(id: string, status: PaymentStatus): void {
     const order = getOrder(id)
     if (!order) return
@@ -454,6 +467,7 @@ export const useStore = () => {
     setProductStatus,
     setStock,
     getOrder,
+    placeOrder,
     setPaymentStatus,
     setDeliveryStatus,
     cancelOrder,

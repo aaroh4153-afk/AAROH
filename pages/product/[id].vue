@@ -32,9 +32,9 @@ if (!product.value) {
 const piece = computed(() => product.value as Product)
 const gallery = computed(() => piece.value.images)
 
-/** Open on the campaign shot when the gallery has one, like the lookbook. */
+/** Start on the first studio image, like the reference product gallery. */
 function defaultImageIndex() {
-  return gallery.value.length > 2 ? gallery.value.length - 1 : 0
+  return 0
 }
 
 /** Start on the middle of the size run, then fall back to the first available. */
@@ -48,9 +48,33 @@ const selectedSize = ref<SizeName | ''>(defaultSize())
 const added = ref('')
 const saved = ref(false)
 const showSizeGuide = ref(false)
-const hoverImageIndex = computed(() =>
-  gallery.value.length > 1 ? (activeImage.value + 1) % gallery.value.length : activeImage.value,
-)
+
+function nextImage() {
+  if (gallery.value.length < 2) return
+  activeImage.value = (activeImage.value + 1) % gallery.value.length
+}
+
+function prevImage() {
+  if (gallery.value.length < 2) return
+  activeImage.value = (activeImage.value - 1 + gallery.value.length) % gallery.value.length
+}
+
+let touchStartX: number | null = null
+
+function onGalleryTouchStart(event: TouchEvent) {
+  touchStartX = event.changedTouches[0]?.clientX ?? null
+}
+
+function onGalleryTouchEnd(event: TouchEvent) {
+  if (touchStartX === null) return
+  const endX = event.changedTouches[0]?.clientX ?? touchStartX
+  const delta = endX - touchStartX
+  if (Math.abs(delta) > 42) {
+    if (delta < 0) nextImage()
+    else prevImage()
+  }
+  touchStartX = null
+}
 
 const category = computed(
   () => categories.value.find((entry) => entry.id === piece.value.category)?.name ?? 'Collection',
@@ -251,21 +275,37 @@ onBeforeUnmount(() => {
         <div class="pdp__media">
           <figure
             class="pdp__main"
-            :class="{
-              'pdp__main--campaign': activeImage > 1,
-              'pdp__main--has-alternate': gallery.length > 1,
-            }"
+            :class="{ 'pdp__main--campaign': activeImage > 1 }"
             :style="{ '--tint': piece.hex }"
+            @touchstart.passive="onGalleryTouchStart"
+            @touchend.passive="onGalleryTouchEnd"
           >
-            <img :src="gallery[activeImage]" :alt="`${piece.name} — ${imageLabel(activeImage)}`" />
-            <img
-              v-if="gallery.length > 1"
-              :src="gallery[hoverImageIndex]"
-              :alt="`${piece.name} — ${imageLabel(hoverImageIndex)}`"
-              class="pdp__main-image-alt"
-              aria-hidden="true"
-            />
+            <div class="pdp__track" :style="{ transform: `translateX(-${activeImage * 100}%)` }">
+              <img
+                v-for="(image, index) in gallery"
+                :key="`${image}-${index}`"
+                :src="image"
+                :alt="`${piece.name} — ${imageLabel(index)}`"
+                :loading="index === 0 ? 'eager' : 'lazy'"
+                decoding="async"
+                draggable="false"
+              />
+            </div>
           </figure>
+
+          <div v-if="gallery.length > 1" class="pdp__gallery-nav" aria-label="Product image navigation">
+            <button type="button" aria-label="Previous image" @click="prevImage">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+            </button>
+            <span>{{ activeImage + 1 }} / {{ gallery.length }}</span>
+            <button type="button" aria-label="Next image" @click="nextImage">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <aside class="pdp__buy">
@@ -638,6 +678,8 @@ onBeforeUnmount(() => {
   display: flex;
   min-width: 0;
   min-height: 0;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .pdp__main {
@@ -654,29 +696,22 @@ onBeforeUnmount(() => {
     linear-gradient(180deg, #fafafa 0%, color-mix(in srgb, var(--tint) 10%, #f1f2f4) 100%);
 }
 
-.pdp__main img {
-  position: absolute;
-  inset: 5%;
-  width: 90%;
-  height: 90%;
+.pdp__track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.55s var(--ease);
+  will-change: transform;
+}
+
+.pdp__track img {
+  width: 100%;
+  height: 100%;
+  flex: 0 0 100%;
+  padding: 5%;
   object-fit: contain;
   object-position: 50% 50%;
-  transition: opacity 0.35s ease;
   user-select: none;
-}
-
-.pdp__main-image-alt {
-  opacity: 0;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .pdp__main--has-alternate:hover .pdp__main-image-alt {
-    opacity: 1;
-  }
-
-  .pdp__main--has-alternate:hover > img:first-child {
-    opacity: 0;
-  }
 }
 
 /* The campaign shot already carries its own warm-grey studio sweep. */
@@ -684,11 +719,51 @@ onBeforeUnmount(() => {
   background: #dfdcdf;
 }
 
-.pdp__main--campaign img {
-  inset: 0;
-  width: 100%;
-  height: 100%;
+.pdp__main--campaign .pdp__track img {
+  padding: 0;
   object-position: 50% 50%;
+}
+
+.pdp__gallery-nav {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  min-height: 26px;
+}
+
+.pdp__gallery-nav button {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.pdp__gallery-nav button:hover {
+  color: var(--primary);
+  transform: scale(1.08);
+}
+
+.pdp__gallery-nav button:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.pdp__gallery-nav span {
+  color: var(--ink);
+  font-family: var(--font-outfit);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Buy column */

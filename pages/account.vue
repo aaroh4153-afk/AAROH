@@ -534,7 +534,7 @@ onMounted(async () => {
                 <button class="account-button account-button--secondary" type="button" @click="toggleCart">
                   Open cart
                 </button>
-                <NuxtLink class="account-button" to="/shop">Continue shopping</NuxtLink>
+                <NuxtLink class="account-button" to="/checkout">Checkout</NuxtLink>
               </div>
             </footer>
           </div>

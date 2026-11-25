@@ -3,15 +3,18 @@ import { getAuth, onAuthStateChanged, type Auth, type User } from 'firebase/auth
 import { syncFirebaseUser, type FirebaseProfile } from '~/utils/firebaseAuth'
 import { useCart } from '~/composables/useCart'
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig().public
   const user = useState<User | null>('aaroh.firebase.user', () => null)
   const profile = useState<FirebaseProfile | null>('aaroh.firebase.profile', () => null)
   let auth: Auth | null = null
 
-  // Hydrate cart from localStorage immediately (no login needed)
+  // Hydrate the cart after the first client render so the server-rendered
+  // header and cart badge stay in sync during hydration.
   const { hydrate } = useCart()
-  void hydrate()
+  nuxtApp.hook('app:mounted', () => {
+    void hydrate()
+  })
 
   if (
     !config.firebaseApiKey ||

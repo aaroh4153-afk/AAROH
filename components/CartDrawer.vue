@@ -118,7 +118,7 @@ onBeforeUnmount(() => {
             Taxes, discounts and shipping calculated at checkout.
           </p>
 
-          <NuxtLink to="/account" class="cart-checkout-btn" @click="toggleCart">
+          <NuxtLink to="/checkout" class="cart-checkout-btn" @click="toggleCart">
             CHECK OUT
           </NuxtLink>
 

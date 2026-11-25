@@ -690,6 +690,15 @@ export async function createOrder(input: unknown): Promise<Order> {
     throw createError({ statusCode: 400, statusMessage: 'Customer details are required' })
   }
 
+  const customerRecord = customer as Record<string, unknown>
+  const requiredCustomerFields = ['name', 'email', 'phone', 'line1', 'city', 'state', 'pincode']
+  if (requiredCustomerFields.some((field) => !String(customerRecord[field] ?? '').trim())) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Add a name, email, mobile number, address, city, state and PIN code.',
+    })
+  }
+
   const id = String(body.id ?? `ARH-${Date.now().toString().slice(-6)}`).trim()
   const subtotal = items.reduce(
     (total, item) => total + Math.round(Number(item.price) || 0) * Math.max(1, Number(item.quantity) || 1),

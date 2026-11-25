@@ -9,9 +9,15 @@ export interface Customer {
   email: string
   phone: string
   line1: string
+  /** Apartment, floor or building, when supplied. */
+  line2?: string
   city: string
   state: string
   pincode: string
+  /** Optional delivery context collected at checkout. */
+  landmark?: string
+  deliveryInstructions?: string
+  specialRequests?: string
 }
 
 export interface OrderItem {

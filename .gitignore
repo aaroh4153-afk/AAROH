@@ -11,3 +11,5 @@ client_secret_*.json
 dist
 .DS_Store
 *.log
+.prisma-composer/
+.alchemy/

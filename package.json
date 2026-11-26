@@ -13,8 +13,12 @@
     "@astryxdesign/cli": "^0.7.16",
     "@astryxdesign/core": "^0.7.16",
     "@astryxdesign/theme-neutral": "^0.7.16",
+    "@prisma/composer": "0.40.0",
+    "@prisma/composer-prisma-cloud": "0.40.0",
+    "@prisma/orm-postgres": "8.0.0-rc.25",
     "@stylexjs/stylex": "^0.19.2",
     "animejs": "^4.5.0",
+    "effect": "4.1.4",
     "firebase": "^11.10.0",
     "firebase-admin": "^12.7.0",
     "gsap": "^3.15.1",
@@ -29,7 +33,14 @@
   "devDependencies": {
     "@types/pg": "^8.23.1",
     "@types/three": "^0.170.0",
+    "prisma": "8.0.0-rc.35",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.3.14"
+  },
+  "overrides": {
+    "@effect/platform-bun": "4.1.4",
+    "@effect/platform-node": "4.1.4",
+    "@effect/platform-node-shared": "4.1.4",
+    "effect": "4.1.4"
   }
 }

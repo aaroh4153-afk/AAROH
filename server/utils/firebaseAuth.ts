@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs'
 import { cert, getApps, initializeApp } from 'firebase-admin/app'
 import { getAuth, type DecodedIdToken } from 'firebase-admin/auth'
 import { createError, getHeader } from 'h3'
@@ -14,11 +15,25 @@ interface FirebaseServiceAccount {
 
 function readRawServiceAccount(): string {
   const config = useRuntimeConfig()
-  return String(
-    config.firebaseServiceAccountJson || process.env.NUXT_FIREBASE_SERVICE_ACCOUNT_JSON || '',
-  )
+  const raw: unknown = config.firebaseServiceAccountJson || process.env.NUXT_FIREBASE_SERVICE_ACCOUNT_JSON || ''
+
+  // Nitro maps NUXT_* variables onto runtimeConfig and parses JSON-looking values,
+  // so a perfectly valid service account can arrive here as an object already.
+  const value = (typeof raw === 'object' && raw !== null ? JSON.stringify(raw) : String(raw))
     .trim()
     .replace(/^\uFEFF/, '')
+
+  if (!value || value.startsWith('{') || value.startsWith('"')) return value
+
+  // Hosting providers also mount secrets as files; a path is easier to manage
+  // than a two-kilobyte dashboard value that can be cut off while pasting.
+  try {
+    if (existsSync(value)) return readFileSync(value, 'utf8').trim().replace(/^\uFEFF/, '')
+  } catch {
+    // Fall through and let the normal parser report the value as invalid.
+  }
+
+  return value
 }
 
 /**

@@ -101,17 +101,24 @@ export function getFirebaseAccountStatus(): 'ok' | 'missing' | 'invalid' {
   return parseServiceAccount(rawAccount) ? 'ok' : 'invalid'
 }
 
+let cachedServiceAccount: { raw: string; account: FirebaseServiceAccount | null } | null = null
+let tokenVerifierChecksRevocation = false
+
 function getFirebaseServiceAccount(): FirebaseServiceAccount | null {
   const rawAccount = readRawServiceAccount()
   if (!rawAccount) return null
+  if (cachedServiceAccount?.raw === rawAccount) return cachedServiceAccount.account
 
   const account = parseServiceAccount(rawAccount)
+  cachedServiceAccount = { raw: rawAccount, account }
   if (!account) {
-    throw createError({
-      statusCode: 503,
-      statusMessage:
-        'Firebase sign-in is not configured correctly on the server. Check the service-account value in the hosting environment.',
-    })
+    // A damaged dashboard value must not break sign-in: ID tokens can still be
+    // verified with the project ID alone, only revocation checks and Admin
+    // helpers need the service account.
+    console.warn(
+      '[aaroh/auth] NUXT_FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON; continuing without Firebase Admin.',
+    )
+    return null
   }
 
   return account
@@ -132,24 +139,40 @@ function getFirebaseTokenAuth() {
 
   // Revocation checks need Admin credentials. Use the configured service account
   // when available, while retaining project-ID-only verification as a fallback.
-  const account = getFirebaseServiceAccount()
   const existingApp = getApps().find((app) => app.name === 'aaroh-token-verifier')
-  const app =
-    existingApp ??
-    initializeApp(
-      account
-        ? {
-            projectId,
-            credential: cert({
-              projectId: account.project_id,
-              clientEmail: account.client_email,
-              privateKey: account.private_key,
-            }),
-          }
-        : { projectId },
-      'aaroh-token-verifier',
-    )
-  return getAuth(app)
+  if (existingApp) {
+    return { auth: getAuth(existingApp), checkRevoked: tokenVerifierChecksRevocation }
+  }
+
+  const account = getFirebaseServiceAccount()
+  if (account) {
+    try {
+      const app = initializeApp(
+        {
+          projectId,
+          credential: cert({
+            projectId: account.project_id,
+            clientEmail: account.client_email,
+            privateKey: account.private_key,
+          }),
+        },
+        'aaroh-token-verifier',
+      )
+      tokenVerifierChecksRevocation = true
+      return { auth: getAuth(app), checkRevoked: true }
+    } catch (error) {
+      // A key that parses but cannot be read (truncated PEM, wrong escapes) must
+      // not take sign-in down; verify tokens with the project ID only instead.
+      console.error(
+        '[aaroh/auth] Firebase Admin credentials could not be loaded; verifying ID tokens without revocation checks.',
+        error,
+      )
+    }
+  }
+
+  const app = initializeApp({ projectId }, 'aaroh-token-verifier')
+  tokenVerifierChecksRevocation = false
+  return { auth: getAuth(app), checkRevoked: false }
 }
 
 function getFirebaseAdminAuth() {
@@ -162,9 +185,10 @@ function getFirebaseAdminAuth() {
   }
 
   const existingApp = getApps().find((app) => app.name === 'aaroh-auth')
-  const app =
-    existingApp ??
-    initializeApp(
+  if (existingApp) return getAuth(existingApp)
+
+  try {
+    const app = initializeApp(
       {
         credential: cert({
           projectId: account.project_id,
@@ -174,8 +198,14 @@ function getFirebaseAdminAuth() {
       },
       'aaroh-auth',
     )
-
-  return getAuth(app)
+    return getAuth(app)
+  } catch (error) {
+    console.error('[aaroh/auth] Firebase Admin credentials could not be loaded.', error)
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'Firebase Admin is not available on the server.',
+    })
+  }
 }
 
 export async function verifyFirebaseRequest(event: H3Event): Promise<DecodedIdToken> {
@@ -186,11 +216,11 @@ export async function verifyFirebaseRequest(event: H3Event): Promise<DecodedIdTo
     throw createError({ statusCode: 401, statusMessage: 'Sign in is required.' })
   }
 
-  const auth = getFirebaseTokenAuth()
+  const { auth, checkRevoked } = getFirebaseTokenAuth()
 
   try {
     // Revocation checks need Admin credentials; skip them when only the project ID is configured.
-    return await auth.verifyIdToken(token, Boolean(getFirebaseServiceAccount()))
+    return await auth.verifyIdToken(token, checkRevoked)
   } catch (error) {
     const code =
       typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : ''

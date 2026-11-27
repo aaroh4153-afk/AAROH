@@ -46,7 +46,7 @@ export const defaultPageBanners: PageBanners = {
     altText: 'AAROH. collection editorial',
     eyebrow: 'The full collection',
     title: 'Everyday essentials, made to be worn.',
-    note: 'Hoodies, shirts and layers — small-batch pieces in a quiet, considered palette.',
+    note: 'Small-batch hoodies, shirts and layers in a quiet, considered palette.',
   },
 }
 

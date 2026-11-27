@@ -295,6 +295,28 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <div class="studio-card__body settings__stack">
+            <div class="studio-grid-2">
+              <label class="studio-field">
+                <span class="studio-label">Title</span>
+                <input
+                  v-model="shopBanner.title"
+                  class="studio-input"
+                  type="text"
+                  maxlength="200"
+                  placeholder="Everyday essentials, made to be worn."
+                />
+              </label>
+              <label class="studio-field">
+                <span class="studio-label">Subtitle</span>
+                <input
+                  v-model="shopBanner.note"
+                  class="studio-input"
+                  type="text"
+                  maxlength="500"
+                  placeholder="Small-batch hoodies, shirts and layers in a quiet palette."
+                />
+              </label>
+            </div>
             <ImageUploader
               v-model="shopImages"
               :max="1"

@@ -19,6 +19,12 @@ services:
         sync: false
       - key: NUXT_STUDIO_ADMIN_EMAIL
         sync: false
+      - key: NUXT_STUDIO_EMAIL
+        sync: false
+      - key: NUXT_STUDIO_PASSWORD
+        sync: false
+      - key: NUXT_STUDIO_SESSION_SECRET
+        sync: false
       - key: NUXT_FIREBASE_AUTH_BASE_URL
         sync: false
       - key: NUXT_SMTP_HOST

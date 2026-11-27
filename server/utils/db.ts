@@ -27,7 +27,20 @@ function connectionString(): string {
     )
   }
 
-  return value
+  return stripSslMode(value)
+}
+
+/**
+ * The pool always sets its own `ssl` options, so a leftover `sslmode=require` in
+ * the URL only makes pg print its libpq-compat deprecation warning on boot.
+ * Drop that one parameter without touching the rest of the connection string.
+ */
+function stripSslMode(value: string): string {
+  if (!/[?&]sslmode=/.test(value)) return value
+
+  const [base, query = ''] = value.split('?')
+  const params = query.split('&').filter((param) => param && !param.startsWith('sslmode='))
+  return params.length ? `${base}?${params.join('&')}` : base!
 }
 
 export function getPool(): PgPool {

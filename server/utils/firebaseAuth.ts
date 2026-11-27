@@ -12,36 +12,105 @@ interface FirebaseServiceAccount {
   private_key?: string
 }
 
-function getFirebaseServiceAccount(): FirebaseServiceAccount | null {
+function readRawServiceAccount(): string {
   const config = useRuntimeConfig()
-  const rawAccount = String(
+  return String(
     config.firebaseServiceAccountJson || process.env.NUXT_FIREBASE_SERVICE_ACCOUNT_JSON || '',
-  ).trim()
+  )
+    .trim()
+    .replace(/^\uFEFF/, '')
+}
 
+/**
+ * Escapes real line breaks and tabs that ended up inside JSON strings, which is
+ * what happens when the service-account file is pasted into a hosting dashboard
+ * and the editor turns the `\n` sequences into actual newlines.
+ */
+function escapeRawControlCharacters(value: string): string {
+  let insideString = false
+  let afterBackslash = false
+  let result = ''
+
+  for (const character of value) {
+    if (insideString) {
+      if (afterBackslash) {
+        afterBackslash = false
+        result += character
+        continue
+      }
+      if (character === '\\') {
+        afterBackslash = true
+        result += character
+        continue
+      }
+      if (character === '"') {
+        insideString = false
+        result += character
+        continue
+      }
+      if (character === '\n' || character === '\r' || character === '\t') {
+        result +=
+          character === '\n' ? '\\n' : character === '\r' ? '\\r' : '\\t'
+        continue
+      }
+      result += character
+      continue
+    }
+
+    if (character === '"') insideString = true
+    result += character
+  }
+
+  return result
+}
+
+function parseServiceAccount(rawAccount: string): FirebaseServiceAccount | null {
   if (!rawAccount) return null
+
+  // Hosting dashboards often keep the quotes that wrapped the value in .env.
+  const unquoted =
+    rawAccount.length > 1 && rawAccount.startsWith('"') && rawAccount.endsWith('"')
+      ? rawAccount.slice(1, -1).replace(/\\"/g, '"')
+      : rawAccount
 
   let parsedAccount: unknown
   try {
-    parsedAccount = JSON.parse(rawAccount)
+    parsedAccount = JSON.parse(unquoted)
   } catch {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Firebase Admin service-account JSON is invalid.',
-    })
+    try {
+      parsedAccount = JSON.parse(escapeRawControlCharacters(unquoted))
+    } catch {
+      return null
+    }
   }
 
-  if (typeof parsedAccount !== 'object' || parsedAccount === null) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Firebase Admin service-account JSON must be an object.',
-    })
-  }
+  if (typeof parsedAccount !== 'object' || parsedAccount === null) return null
 
   const account = parsedAccount as FirebaseServiceAccount
-  if (!account.project_id || !account.client_email || !account.private_key) {
+  if (!account.project_id || !account.client_email || !account.private_key) return null
+
+  // A double-escaped key (`\\n` in the dashboard) survives JSON.parse with the
+  // escapes intact; firebase-admin needs real line breaks to read the PEM.
+  return { ...account, private_key: String(account.private_key).replace(/\\n/g, '\n') }
+}
+
+/** Low-sensitivity state of the service-account config, for /api/health. */
+export function getFirebaseAccountStatus(): 'ok' | 'missing' | 'invalid' {
+  const rawAccount = readRawServiceAccount()
+  if (!rawAccount) return 'missing'
+  return parseServiceAccount(rawAccount) ? 'ok' : 'invalid'
+}
+
+function getFirebaseServiceAccount(): FirebaseServiceAccount | null {
+  const rawAccount = readRawServiceAccount()
+  if (!rawAccount) return null
+
+  const account = parseServiceAccount(rawAccount)
+  if (!account) {
     throw createError({
-      statusCode: 500,
-      statusMessage: 'Firebase Admin service-account JSON is missing required fields.',
+      statusCode: 503,
+      statusMessage:
+        'Firebase sign-in is not configured correctly on the server. Check the service-account value in the hosting environment.',
     })
   }
 

@@ -50,7 +50,7 @@ function backToTop() {
           <div class="site-footer__col">
             <h3 class="site-footer__heading">CONTACT</h3>
             <ul class="site-footer__links">
-              <li><a href="mailto:hello@aaroh.in">hello@aaroh.in</a></li>
+              <li><a href="mailto:hello@aaroh.in">aaroh4153@gmail.com</a></li>
               <li><a :href="INSTAGRAM_URL" target="_blank" rel="noopener">Instagram</a></li>
               <li><a :href="FACEBOOK_URL" target="_blank" rel="noopener">Facebook</a></li>
               <li><a :href="TIKTOK_URL" target="_blank" rel="noopener">Tik Tok</a></li>

@@ -6,12 +6,23 @@
   // texture and the grain still comes from its own simplex noise.
   settings.noise = "";
   var start = function (api) {
+    var instances = [];
     var run = function () {
+      // Drop instances whose host element left the DOM (client-side navigation).
+      instances = instances.filter(function (entry) {
+        if (entry.element.isConnected) return true;
+        try { entry.instance.destroy(); } catch (error) { /* already gone */ }
+        return false;
+      });
       document.querySelectorAll('[data-wayglim="wl-16ui5k2"]:not([data-wayglim-ready])').forEach(function (element) {
         element.setAttribute("data-wayglim-ready", "");
-        api.mount(element, settings);
+        var instance = api.mount(element, settings);
+        element.__wayglimInstance = instance;
+        instances.push({ element: element, instance: instance });
       });
     };
+    // Re-runnable so a client-side route back to the hero mounts a fresh canvas.
+    window.WayglimMountHeroBackground = run;
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
     else run();
   };

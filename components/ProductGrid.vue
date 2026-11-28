@@ -102,12 +102,6 @@ function isNewCut(product: Product) {
   return Number.isFinite(createdAt) && createdAt > Date.now() - 30 * 24 * 60 * 60 * 1000
 }
 
-function availableSizeLabel(product: Product) {
-  const sizes = product.sizes.filter((size) => size.stock > 0)
-  if (!sizes.length) return 'Sold out'
-  return `${sizes.length} ${sizes.length === 1 ? 'size' : 'sizes'} available`
-}
-
 function quickAdd(product: Product) {
   if (stockState(product) === 'out') return
   const size = firstAvailableSize(product)
@@ -414,13 +408,13 @@ onBeforeUnmount(() => {
             </button>
 
             <button
-              v-if="!props.fullPage"
               class="rtw-quick-add"
               type="button"
+              :aria-label="stockState(product) === 'out' ? `${product.name} is sold out` : `Add ${product.name} to cart`"
               :disabled="stockState(product) === 'out'"
               @click.stop="quickAdd(product)"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
                 <path d="M3 6h18" />
                 <path d="M16 10a4 4 0 0 1-8 0" />
@@ -438,17 +432,12 @@ onBeforeUnmount(() => {
           />
 
           <div class="rtw-card__footer">
-            <div class="rtw-card__text">
-              <h3 class="rtw-card__name">{{ product.name }}</h3>
-              <p class="rtw-card__meta" :class="{ 'rtw-card__meta--low': stockState(product) === 'low' }">
-                {{ product.colour }} · {{ availableSizeLabel(product) }}
-              </p>
-            </div>
+            <h3 class="rtw-card__name">{{ product.name }}</h3>
             <div class="rtw-card__prices">
-              <span class="rtw-card__price">{{ formatPrice(product.price) }}</span>
               <s v-if="product.compareAtPrice" class="rtw-card__compare">
                 {{ formatPrice(product.compareAtPrice) }}
               </s>
+              <span class="rtw-card__price">{{ formatPrice(product.price) }}</span>
             </div>
           </div>
         </article>
@@ -782,11 +771,11 @@ onBeforeUnmount(() => {
 
 .rtw-card__footer {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
   margin-top: auto;
-  padding: 11px 12px 12px;
+  padding: 11px 13px 12px;
   border-top: 1px solid var(--line);
   background: var(--card);
 }
@@ -1533,22 +1522,22 @@ onBeforeUnmount(() => {
 
 .collection--full-page .rtw-col {
   min-width: 0;
-  border: 0.09375rem solid var(--line-strong);
+  border: 1px solid var(--line);
   border-radius: 0.125rem;
-  background: transparent;
-  box-shadow: 0 0.125rem 0.25rem color-mix(in srgb, var(--ink) 12%, transparent);
+  background: var(--card);
+  box-shadow: none;
 }
 
 .collection--full-page .rtw-card__image-box {
-  background: transparent;
+  background: #ffffff;
   transition: none;
 }
 
 .collection--full-page .rtw-img {
-  inset: 0.375rem 0.625rem 1.125rem;
-  width: calc(100% - 1.25rem);
-  height: calc(100% - 1.5rem);
-  object-position: center top;
+  inset: 14px 10px 18px;
+  width: calc(100% - 20px);
+  height: calc(100% - 32px);
+  object-position: center;
   transition: none;
 }
 
@@ -1560,7 +1549,7 @@ onBeforeUnmount(() => {
 .collection--full-page .rtw-col:hover .rtw-card__image-box,
 .collection--full-page .rtw-col:focus-within .rtw-card__image-box,
 .collection--full-page .rtw-col:active .rtw-card__image-box {
-  background: transparent;
+  background: #ffffff;
 }
 
 .collection--full-page .rtw-col:hover .rtw-img,
@@ -1637,9 +1626,8 @@ onBeforeUnmount(() => {
 .rtw-card__prices {
   display: flex;
   flex: none;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 1px;
+  align-items: baseline;
+  gap: 7px;
 }
 
 .rtw-card__compare {

@@ -42,6 +42,8 @@ onBeforeUnmount(() => {
 
 <template>
   <section id="top" ref="root" class="hero" aria-labelledby="hero-title">
+    <WayglimBackground />
+
     <div class="hero__head">
       <div class="hero__top">
         <p class="eyebrow hero__eyebrow">New collection</p>
@@ -92,7 +94,15 @@ onBeforeUnmount(() => {
   max-width: var(--max);
   margin-inline: auto;
   padding: clamp(26px, 3.4vw, 54px) var(--gutter) clamp(20px, 3vw, 40px);
+  overflow: hidden;
   background: var(--surface);
+}
+
+/* The shader sits behind the hero copy. */
+.hero__head,
+.hero__stage-wrap {
+  position: relative;
+  z-index: 1;
 }
 
 .hero__head {
